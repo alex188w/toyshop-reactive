@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: toyshop
+  r2dbc:
+    url: r2dbc:postgresql://postgres:5432/toystore
+    username: postgres
+    password: postgres
+  sql:
+    init:
+      mode: never   # для R2DBC не работает jdbc-инициализация
+  data:
+    r2dbc:
+      repositories:
+        enabled: true
+server:
+  port: 8080
+
+
