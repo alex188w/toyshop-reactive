@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Добавление товара</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+        }
+
+        td {
+            padding: 10px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .drop-zone {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        img {
+            max-height: 250px;
+            margin-top: 10px;
+        }
+
+        .top-link {
+            display: block;
+            text-align: right;
+            margin-bottom: 10px;
+        }
+
+        .file-label {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .file-label:hover {
+            background-color: #0056b3;
+        }
+
+        /* Прячем оригинальный input */
+        #file-input {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="top-link">
+            <a href="/products"><b>НА ГЛАВНУЮ</b></a>
+        </div>
+        <h2>Добавление товара</h2>
+
+        <form action="/products/add" method="post" enctype="multipart/form-data">
+            <table>
+                <tr>
+                    <td><label>Название:</label></td>
+                    <td><input type="text" name="name" required></td>
+                </tr>
+                <tr>
+                    <td><label>Описание:</label></td>
+                    <td><textarea name="description" rows="4"></textarea></td>
+                </tr>
+                <tr>
+                    <td><label>Цена:</label></td>
+                    <td><input type="number" name="price" step="1" required></td>
+                </tr>
+                <tr>
+                    <td><label>Количество:</label></td>
+                    <td><input type="number" name="quantity" min="0" required></td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <input type="hidden" name="imageUrl" id="imageUrl" readonly>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <div class="drop-zone" id="drop-zone">
+                            <label for="file-input" class="file-label">Выбрать файл</label>
+                            <input type="file" id="file-input" name="file" accept="image/*">
+
+                            <div id="preview">
+                                <img id="preview-img" style="max-width: 200px; display: none;" />
+                            </div>
+
+
+                            <!-- <button type="button" id="select-file-btn">Выбрать файл</button>
+                            <input type="file" id="file-input" style="display:none" accept="image/*" />
+                            <div id="preview">
+                                <img id="preview-img" />
+                            </div> -->
+                        </div>
+                        <input type="file" id="file-input" name="file" accept="image/*"><br>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: center;">
+                        <button type="submit">Сохранить</button>
+                    </td>
+                </tr>
+            </table>
+
+
+            <!-- <input type="file" id="file-input" name="file" accept="image/*"><br> -->
+
+            <!-- Превью изображения -->
+            <img id="preview-img" src="" alt="Превью" style="max-width:200px; display:none; margin-top:10px;"><br>
+
+
+        </form>
+    </div>
+</body>
+
+<!-- Скрипт для заргрузки изображений -->
+<script>
+    const fileInput = document.getElementById('file-input');
+    const previewImg = document.getElementById('preview-img');
+
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            alert('Можно загружать только изображения!');
+            fileInput.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            previewImg.src = reader.result;
+            previewImg.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    });
+</script>
+
+
+
+</html>

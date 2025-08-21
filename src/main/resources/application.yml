@@ -1,10 +1,12 @@
 spring:
+  webflux:
+    static-path-pattern: "/uploads/**"
   application:
     name: toyshop
   r2dbc:
-    url: r2dbc:postgresql://postgres:5432/toystore
+    url: r2dbc:postgresql://localhost:5432/toyshop
     username: postgres
-    password: postgres
+    password: Fd18091971
   sql:
     init:
       mode: never   # для R2DBC не работает jdbc-инициализация
@@ -13,6 +15,6 @@ spring:
       repositories:
         enabled: true
 server:
-  port: 8080
+  port: 8085
 
 

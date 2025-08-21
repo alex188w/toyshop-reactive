@@ -6,7 +6,7 @@ import org.springframework.data.relational.core.mapping.Column;
 import lombok.Data;
 
 @Data
-@Table("products")
+@Table("product")
 public class Product {
     @Id
     private Long id; // в БД BIGSERIAL

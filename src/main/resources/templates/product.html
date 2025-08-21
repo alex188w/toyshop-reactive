@@ -1,0 +1,120 @@
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${product.name}">Товар</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .product {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            max-width: 500px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .product img {
+            max-height: 300px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+        }
+
+        .product h2 {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .product p {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+
+        .price {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 15px 0;
+            color: #28a745;
+        }
+
+        .cart-form {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            align-items: center;
+        }
+
+        .cart-form input {
+            width: 70px;
+            padding: 6px;
+            text-align: center;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .back-link {
+            margin-top: 20px;
+            display: inline-block;
+            text-decoration: none;
+            color: #007bff;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="product">
+        <h2 th:text="${product.name}">Название товара</h2>
+        <img th:if="${product.imageUrl != null}" th:src="${product.imageUrl}" alt="Нет фото" />
+
+        <div>
+            <p><strong>Описание:</strong></p>
+            <p th:text="${product.description}">Описание</p>
+        </div>
+
+        <p class="price" th:text="${product.price} + ' ₽'">Цена</p>
+        <p th:text="'Остаток: ' + ${product.quantity}">Остаток</p>
+
+        <form class="cart-form" method="post" th:action="@{/cart/add/{id}(id=${product.id})}">
+            <input type="number" name="quantity" min="1" th:attr="max=${product.quantity}" value="1" />
+            <button type="submit" th:disabled="${product.quantity == 0}">
+                В корзину
+            </button>
+        </form>
+
+        <a href="/products" class="back-link">← Вернуться к товарам</a>
+    </div>
+</body>
