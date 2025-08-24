@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 
 import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -24,8 +25,32 @@ public class ProductController {
     private final CartService cartService;
 
     @GetMapping
-    public Mono<String> listProducts(@CookieValue("JSESSIONID") String sessionId, Model model) {
-        Mono<List<Product>> productsMono = service.getAll().collectList();
+    public Mono<String> listProducts(
+            @CookieValue(name = "CART_SESSION", required = false) String sessionId,
+            ServerHttpResponse response,
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "sort", defaultValue = "name_asc") String sort,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            Model model) {
+
+        Mono<List<Product>> productsMono = service.getAll()
+                .filter(p -> keyword == null || p.getName().toLowerCase().contains(keyword.toLowerCase()))
+                .sort((p1, p2) -> {
+                    switch (sort) {
+                        case "price_asc":
+                            return p1.getPrice().compareTo(p2.getPrice());
+                        case "price_desc":
+                            return p2.getPrice().compareTo(p1.getPrice());
+                        case "name_desc":
+                            return p2.getName().compareToIgnoreCase(p1.getName());
+                        case "name_asc":
+                        default:
+                            return p1.getName().compareToIgnoreCase(p2.getName());
+                    }
+                })
+                .take(size) // ограничиваем количество товаров на страницу
+                .collectList();
+
         Mono<CartView> cartMono = cartService.getCartView(sessionId);
 
         return Mono.zip(productsMono, cartMono)
@@ -39,6 +64,9 @@ public class ProductController {
 
                     model.addAttribute("products", products);
                     model.addAttribute("cartTotalQuantity", totalQuantity);
+                    model.addAttribute("keyword", keyword);
+                    model.addAttribute("sort", sort);
+                    model.addAttribute("size", size);
 
                     return "products";
                 });

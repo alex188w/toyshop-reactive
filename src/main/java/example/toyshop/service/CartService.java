@@ -135,9 +135,13 @@ public class CartService {
     @Transactional
     public Mono<Cart> checkout(String sessionId) {
         return cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)
+                .switchIfEmpty(Mono.error(new IllegalStateException("Активная корзина не найдена")))
+                .doOnNext(cart -> System.out.println("[CHECKOUT] Найдена активная корзина id=" + cart.getId()))
                 .flatMap(cart -> {
                     cart.setStatus(CartStatus.COMPLETED);
-                    return cartRepository.save(cart);
+                    System.out.println("[CHECKOUT] Меняем статус корзины id=" + cart.getId() + " → COMPLETED");
+                    return cartRepository.save(cart)
+                            .doOnNext(saved -> System.out.println("[CHECKOUT] Сохранена корзина id=" + saved.getId() + " со статусом " + saved.getStatus()));
                 });
     }
 }
