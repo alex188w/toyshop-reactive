@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Заказ</title>
+</head>
+
+<body>
+    <div style="width: 60%; margin: auto;">
+        <h2 style="text-align: center;">Поздравляем! Успешная покупка! 😃</h2>
+
+        <h2>Заказ № <span th:text="${order.id}"></span></h2>
+        <p>Дата: <span th:text="${#temporals.format(order.createdAt, 'dd.MM.yyyy HH:mm')}"></span></p>
+        <p>Общая сумма: <span th:text="${order.totalAmount}"></span> ₽</p>
+
+        <div th:each="item : ${order.items}"
+            style="display: flex; align-items: center; border-bottom: 1px solid #ccc; padding: 15px 0;">
+
+            <!-- Превью -->
+            <div style="width: 100px; height: 100px; margin-right: 20px;">
+                <img th:src="${item.imageUrl}" alt="Изображение" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+
+            <!-- Название + количество -->
+            <div style="flex-grow: 1;">
+                <h3 th:text="${item.name}"></h3>
+                <span th:text="'Количество: ' + ${item.quantity}" style="margin: 0 10px;"></span>
+            </div>
+
+            <!-- Сумма -->
+            <div style="width: 120px; text-align: right;">
+                <span th:text="'Сумма: ' + ${item.totalPrice} + ' ₽'"></span>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <a href="/products">← Вернуться к товарам</a>
+        </div>
+    </div>
+</body>
+
+</html>

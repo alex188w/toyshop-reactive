@@ -1,9 +1,6 @@
 package example.toyshop.model;
 
 import lombok.Data;
-
-import java.math.BigDecimal;
-
 import org.springframework.http.codec.multipart.FilePart;
 
 @Data

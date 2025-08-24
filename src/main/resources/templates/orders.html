@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>История заказов</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+    <h2>История заказов</h2>
+
+    <div th:if="${#lists.isEmpty(orders)}">
+        <p>У вас пока нет заказов.</p>
+    </div>
+
+    <div th:each="order : ${orders}">
+        <h3>
+            Заказ #[[${order.id}]] — 
+            [[${#temporals.format(order.createdAt, 'dd.MM.yyyy HH:mm')}]]
+        </h3>
+
+        <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 80%;">
+            <thead>
+                <tr>
+                    <th>Товар</th>
+                    <th>Цена</th>
+                    <th>Количество</th>
+                    <th>Сумма</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="item : ${order.items}">
+                    <td th:text="${item.name}"></td>
+                    <td th:text="${item.price}"></td>
+                    <td th:text="${item.quantity}"></td>
+                    <td th:text="${item.totalPrice}"></td>
+                </tr>
+                <tr>
+                    <td colspan="3" style="text-align: right;"><b>Итого:</b></td>
+                    <td th:text="${order.totalAmount}"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p>
+            <a th:href="@{'/orders/' + ${order.id}}">Смотреть заказ</a>
+        </p>
+        <hr/>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <a href="/products">← Вернуться к товарам</a>
+    </div>
+</body>
+</html>

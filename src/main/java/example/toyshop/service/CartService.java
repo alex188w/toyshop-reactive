@@ -5,16 +5,12 @@ import example.toyshop.dto.cart.CartView;
 import example.toyshop.model.Cart;
 import example.toyshop.model.CartItem;
 import example.toyshop.model.CartStatus;
-import example.toyshop.model.Product;
 import example.toyshop.repository.CartItemRepository;
 import example.toyshop.repository.CartRepository;
 import example.toyshop.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.CookieValue;
-
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
@@ -134,5 +130,14 @@ public class CartService {
                             return new CartView(items, total);
                         }))
                 .switchIfEmpty(Mono.just(new CartView(List.of(), BigDecimal.ZERO)));
+    }
+
+    @Transactional
+    public Mono<Cart> checkout(String sessionId) {
+        return cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)
+                .flatMap(cart -> {
+                    cart.setStatus(CartStatus.COMPLETED);
+                    return cartRepository.save(cart);
+                });
     }
 }

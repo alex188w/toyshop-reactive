@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import example.toyshop.model.Product;
 import example.toyshop.repository.ProductRepository;
@@ -12,8 +11,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
