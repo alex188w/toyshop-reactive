@@ -8,7 +8,9 @@ import example.toyshop.service.ProductService;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.UUID;
 
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Controller;
@@ -33,6 +35,16 @@ public class ProductController {
             @RequestParam(name = "size", defaultValue = "10") int size,
             Model model) {
 
+        // Генерация sessionId, если нет
+        if (sessionId == null) {
+            sessionId = UUID.randomUUID().toString();
+            ResponseCookie cookie = ResponseCookie.from("CART_SESSION", sessionId)
+                    .path("/")
+                    .httpOnly(true)
+                    .build();
+            response.addCookie(cookie);
+        }
+
         Mono<List<Product>> productsMono = service.getAll()
                 .filter(p -> keyword == null || p.getName().toLowerCase().contains(keyword.toLowerCase()))
                 .sort((p1, p2) -> {
@@ -48,7 +60,7 @@ public class ProductController {
                             return p1.getName().compareToIgnoreCase(p2.getName());
                     }
                 })
-                .take(size) // ограничиваем количество товаров на страницу
+                .take(size)
                 .collectList();
 
         Mono<CartView> cartMono = cartService.getCartView(sessionId);

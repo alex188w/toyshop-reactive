@@ -1,0 +1,12 @@
+# spring:
+#   r2dbc:
+#     url: r2dbc:postgresql://localhost:5432/testdb
+#     username: test
+#     password: test
+#   sql:
+#     init:
+#       mode: always
+#       schema-locations: classpath:schema.sql
+
+logging.level:
+  org.springframework.jdbc.core.JdbcTemplate: DEBUG # для логирования SQL запросов

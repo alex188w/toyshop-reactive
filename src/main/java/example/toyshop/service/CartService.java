@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -117,8 +118,26 @@ public class CartService {
     /**
      * Получить DTO для шаблона
      */
+    // public Mono<CartView> getCartView(String sessionId) {
+    //     return findActiveCart(sessionId) // вместо getActiveCart
+    //             .flatMap(cart -> cartItemRepository.findByCartId(cart.getId())
+    //                     .flatMap(item -> productRepository.findById(item.getProductId())
+    //                             .map(product -> new CartItemView(item, product)))
+    //                     .collectList()
+    //                     .map(items -> {
+    //                         BigDecimal total = items.stream()
+    //                                 .map(CartItemView::getTotalPrice)
+    //                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    //                         return new CartView(items, total);
+    //                     }))
+    //             .switchIfEmpty(Mono.just(new CartView(List.of(), BigDecimal.ZERO)));
+    // }
+
     public Mono<CartView> getCartView(String sessionId) {
-        return findActiveCart(sessionId) // вместо getActiveCart
+        return findActiveCart(sessionId)
+                .switchIfEmpty(
+                        // создаём новую корзину и сохраняем
+                        cartRepository.save(new Cart(null, sessionId, CartStatus.ACTIVE, LocalDateTime.now())))
                 .flatMap(cart -> cartItemRepository.findByCartId(cart.getId())
                         .flatMap(item -> productRepository.findById(item.getProductId())
                                 .map(product -> new CartItemView(item, product)))
@@ -128,8 +147,7 @@ public class CartService {
                                     .map(CartItemView::getTotalPrice)
                                     .reduce(BigDecimal.ZERO, BigDecimal::add);
                             return new CartView(items, total);
-                        }))
-                .switchIfEmpty(Mono.just(new CartView(List.of(), BigDecimal.ZERO)));
+                        }));
     }
 
     @Transactional
@@ -141,7 +159,8 @@ public class CartService {
                     cart.setStatus(CartStatus.COMPLETED);
                     System.out.println("[CHECKOUT] Меняем статус корзины id=" + cart.getId() + " → COMPLETED");
                     return cartRepository.save(cart)
-                            .doOnNext(saved -> System.out.println("[CHECKOUT] Сохранена корзина id=" + saved.getId() + " со статусом " + saved.getStatus()));
+                            .doOnNext(saved -> System.out.println("[CHECKOUT] Сохранена корзина id=" + saved.getId()
+                                    + " со статусом " + saved.getStatus()));
                 });
     }
 }
