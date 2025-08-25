@@ -15,7 +15,6 @@ import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -114,24 +113,6 @@ public class CartService {
                         .flatMap(cartItemRepository::delete))
                 .then();
     }
-
-    /**
-     * Получить DTO для шаблона
-     */
-    // public Mono<CartView> getCartView(String sessionId) {
-    //     return findActiveCart(sessionId) // вместо getActiveCart
-    //             .flatMap(cart -> cartItemRepository.findByCartId(cart.getId())
-    //                     .flatMap(item -> productRepository.findById(item.getProductId())
-    //                             .map(product -> new CartItemView(item, product)))
-    //                     .collectList()
-    //                     .map(items -> {
-    //                         BigDecimal total = items.stream()
-    //                                 .map(CartItemView::getTotalPrice)
-    //                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-    //                         return new CartView(items, total);
-    //                     }))
-    //             .switchIfEmpty(Mono.just(new CartView(List.of(), BigDecimal.ZERO)));
-    // }
 
     public Mono<CartView> getCartView(String sessionId) {
         return findActiveCart(sessionId)

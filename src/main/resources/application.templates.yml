@@ -5,8 +5,8 @@ spring:
     name: toyshop
   r2dbc:
     url: r2dbc:postgresql://localhost:5432/toyshop
-    username: postgres
-    password: Fd18091971
+    username: your_userName
+    password: your_userPassword
   sql:
     init:
       mode: never   # для R2DBC не работает jdbc-инициализация
@@ -16,5 +16,3 @@ spring:
         enabled: true
 server:
   port: 8085
-
-

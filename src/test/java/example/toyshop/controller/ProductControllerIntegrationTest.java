@@ -1,60 +1,35 @@
 package example.toyshop.controller;
 
 import example.toyshop.AbstractIntegrationTest;
+import example.toyshop.config.PostgresR2dbcTestcontainer;
 import example.toyshop.model.Product;
-import example.toyshop.model.ProductForm;
-import example.toyshop.dto.cart.CartView;
 import example.toyshop.repository.ProductRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-@AutoConfigureWebTestClient
-@Testcontainers
-class ProductControllerIntegrationTest extends AbstractIntegrationTest {
-
-    @Autowired
-    private WebTestClient webTestClient;
+// @SpringBootTest
+// @AutoConfigureWebTestClient
+// @Testcontainers
+@SpringJUnitConfig(PostgresR2dbcTestcontainer.class)
+public class ProductControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private ProductRepository productRepository;
 
-    @BeforeEach
-    void cleanDb() {
-        productRepository.deleteAll().block();
-    }
-
-    // @Test
-    // void listProducts_shouldReturnOkAndContainProducts() {
-    // // Сохраняем товар
-    // productRepository.save(new Product(null, "Мишка", "Плюшевый", 1000, "img",
-    // 5)).block();
-
-    // // Делаем GET без корзины
-    // webTestClient.get()
-    // .uri("/products")
-    // .exchange()
-    // .expectStatus().isOk()
-    // .expectBody(String.class)
-    // .consumeWith(res -> assertThat(res.getResponseBody()).contains("Мишка"));
-    // }
+    @Autowired
+    private WebTestClient webTestClient;
 
     @Test
     void listProducts_shouldReturnOkAndContainProducts() {
         // Сохраняем товар в БД
-        productRepository.save(new Product(null, "Мишка", "Плюшевый", 1000, "img",
-                5)).block();
+        productRepository.save(new Product(null, "Мишка", "Плюшевый", 1000, "img", 5)).block();
 
         // Генерируем sessionId для корзины
         String sessionId = UUID.randomUUID().toString();
@@ -62,7 +37,7 @@ class ProductControllerIntegrationTest extends AbstractIntegrationTest {
         // Делаем GET-запрос с cookie
         webTestClient.get()
                 .uri("/products")
-                .cookie("CART_SESSION", sessionId) // <-- добавляем cookie
+                .cookie("CART_SESSION", sessionId)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(String.class)

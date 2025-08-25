@@ -43,3 +43,5 @@ build/
 .classpath
 
 .env
+
+src/main/resources/application.yml

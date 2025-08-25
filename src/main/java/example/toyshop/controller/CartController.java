@@ -110,17 +110,6 @@ public class CartController {
                                 .thenReturn("redirect:/cart");
         }
 
-        // Оформить заказ
-        // @PostMapping("/checkout")
-        // public Mono<String> checkout(WebSession session) {
-        // System.out.println("------------------------------------------------------[checkout]
-        // sessionId = ");
-        // String sessionId = session.getId();
-        // return cartService.checkout(sessionId)
-        // .delayUntil(order -> session.invalidate())
-        // .map(order -> "redirect:/orders/" + order.getId());
-        // }
-
         @PostMapping("/checkout")
         public Mono<String> checkout(@CookieValue(name = "CART_SESSION", required = false) String sessionId,
                         ServerHttpResponse response) {
@@ -141,74 +130,7 @@ public class CartController {
                                 });
         }
 
-        // @PostMapping("/checkout")
-        // public Mono<String> checkout(WebSession session, Model model) {
-        // return cartService.checkout(session.getId())
-        // .flatMap(order -> session.invalidate()
-        // .thenReturn(order.getId()))
-        // .thenReturn("redirect:/orders"); // + order.getId() - если надо перейти к
-        // отдельному
-        // // заказу
-
-        // }
-
-        // @PostMapping("/checkout")
-        // public Mono<String> checkout(WebSession session) {
-        // return cartService.checkout(session.getId())
-        // .flatMap(order ->
-        // session.invalidate()
-        // .thenReturn("redirect:/orders/" + order.getId())
-        // );
-        // }
-
-        // @PostMapping("/checkout")
-        // public Mono<String> checkout(WebSession session) {
-        // System.out.println("------------------------------------------------------[checkout]
-        // sessionId = "
-        // + session.getId());
-        // return cartService.checkout(session.getId())
-        // .delayUntil(order -> {
-        // System.out.println("[CHECKOUT] Инвалидируем сессию " + session.getId());
-        // return session.invalidate();
-        // })
-        // .map(order -> {
-        // System.out.println("[CHECKOUT] Редирект на заказ id=" + order.getId());
-        // return "redirect:/orders/" + order.getId();
-        // });
-        // }
-        // @PostMapping("/checkout")
-        // public Mono<String> checkout(ServerWebExchange exchange) {
-        // return exchange.getSession()
-        // .flatMap(session -> {
-        // String sessionId = session.getId();
-        // return cartService.checkout(sessionId)
-        // .flatMap(orders -> session.invalidate())
-        // .thenReturn("redirect:/orders");
-        // });
-        // }
-
-        // @PostMapping("/checkout")
-        public Mono<String> goTo(int id) {
-                return Mono.just("redirect:/orders/" + id);
-        }
-
-        // @PostMapping("/checkout")
-        // public Mono<String> checkout(WebSession session) {
-        // String sessionId = session.getId();
-        // return cartService.checkout(sessionId)
-        // .flatMap(order -> session.invalidate())
-        // .then(goTo(198));
-        // }
-
-        // @PostMapping("/checkout")
-        // public Mono<String> checkout(WebSession session) {
-        // String sessionId = session.getId();
-        // WebSession order;
-        // return cartService.checkout(sessionId)
-        // .flatMap(order -> session.invalidate()
-        // .then(Mono.just(order.getId())) // возвращаем order после invalidate
-        // )
-        // .thenReturn("redirect:/orders" + order.getId()); // теперь order.getId()
-        // виден
+        // public Mono<String> goTo(int id) {
+        //         return Mono.just("redirect:/orders/" + id);
         // }
 }

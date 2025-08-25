@@ -37,19 +37,13 @@ public class OrderController {
                         .flatMap(item -> productRepository.findById(item.getProductId())
                                 .map(product -> new CartItemView(item, product)))
                         .collectList()
-                        .map(items -> new OrderView(cart, items))
-                )
+                        .map(items -> new OrderView(cart, items)))
                 .collectList()
                 .map(orderViews -> {
                     model.addAttribute("orders", orderViews);
                     return "orders"; // orders.html
                 });
     }
-
-    // @GetMapping("/{id}")
-    // public String viewOrder(Model model) {
-    //     return "order";
-    // }
 
     @GetMapping("/{id}")
     public Mono<String> viewOrder(@PathVariable Long id, Model model) {
@@ -59,8 +53,7 @@ public class OrderController {
                         .flatMap(ci -> productRepository.findById(ci.getProductId())
                                 .map(product -> new CartItemView(ci, product)))
                         .collectList()
-                        .map(items -> new OrderView(cart, items))
-                )
+                        .map(items -> new OrderView(cart, items)))
                 .map(orderView -> {
                     model.addAttribute("order", orderView); // <-- OrderView кладём
                     return "order";
