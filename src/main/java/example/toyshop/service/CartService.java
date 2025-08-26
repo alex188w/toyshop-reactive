@@ -16,6 +16,14 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * Сервис для работы с корзиной пользователя.
+ * <p>
+ * Обеспечивает создание и получение активной корзины, добавление, удаление и
+ * изменение количества
+ * товаров, а также оформление заказа (checkout). Все операции выполняются
+ * асинхронно через R2DBC.
+ */
 @Service
 @RequiredArgsConstructor
 public class CartService {
@@ -25,7 +33,10 @@ public class CartService {
     private final ProductRepository productRepository;
 
     /**
-     * Получить или создать активную корзину для сессии
+     * Получить активную корзину по sessionId или создать новую, если её нет.
+     *
+     * @param sessionId идентификатор сессии пользователя
+     * @return активная корзина
      */
     public Mono<Cart> getActiveCart(String sessionId) {
         return cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)
@@ -38,14 +49,21 @@ public class CartService {
     }
 
     /**
-     * Найти активную корзину без создания
+     * Найти активную корзину без создания новой.
+     *
+     * @param sessionId идентификатор сессии пользователя
+     * @return активная корзина, если существует
      */
     public Mono<Cart> findActiveCart(String sessionId) {
         return cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE);
     }
 
     /**
-     * Добавить товар в корзину (создаёт корзину при необходимости)
+     * Добавить товар в корзину. Создаёт корзину при необходимости.
+     *
+     * @param sessionId идентификатор сессии пользователя
+     * @param productId идентификатор товара
+     * @return Mono<Void> после завершения операции
      */
     @Transactional
     public Mono<Void> addProduct(String sessionId, Long productId) {
@@ -61,13 +79,17 @@ public class CartService {
                                         item.setQuantity(item.getQuantity() + 1);
                                         return cartItemRepository.save(item);
                                     }
-                                    return Mono.just(item); // уже максимум
+                                    return Mono.just(item); // максимум достигнут
                                 })))
                 .then();
     }
 
     /**
-     * Уменьшить количество товара в корзине (без создания корзины)
+     * Уменьшить количество товара в корзине. Не создаёт новую корзину.
+     *
+     * @param sessionId идентификатор сессии пользователя
+     * @param productId идентификатор товара
+     * @return Mono<Void> после завершения операции
      */
     @Transactional
     public Mono<Void> decreaseProduct(String sessionId, Long productId) {
@@ -85,8 +107,12 @@ public class CartService {
     }
 
     /**
-     * Увеличить количество товара в корзине (без создания корзины, с проверкой
-     * склада)
+     * Увеличить количество товара в корзине. Не создаёт новую корзину.
+     * Проверяет наличие товара на складе.
+     *
+     * @param sessionId идентификатор сессии пользователя
+     * @param productId идентификатор товара
+     * @return Mono<Void> после завершения операции
      */
     @Transactional
     public Mono<Void> increaseProduct(String sessionId, Long productId) {
@@ -98,13 +124,17 @@ public class CartService {
                                         item.setQuantity(item.getQuantity() + 1);
                                         return cartItemRepository.save(item).then();
                                     }
-                                    return Mono.empty(); // на складе больше нет
+                                    return Mono.empty(); // товара на складе больше нет
                                 })))
                 .then();
     }
 
     /**
-     * Удалить товар из корзины полностью (без создания корзины)
+     * Полностью удалить товар из корзины.
+     *
+     * @param sessionId идентификатор сессии пользователя
+     * @param productId идентификатор товара
+     * @return Mono<Void> после завершения операции
      */
     @Transactional
     public Mono<Void> removeProduct(String sessionId, Long productId) {
@@ -114,11 +144,15 @@ public class CartService {
                 .then();
     }
 
+    /**
+     * Получить представление корзины для отображения пользователю.
+     *
+     * @param sessionId идентификатор сессии пользователя
+     * @return {@link CartView} с элементами корзины и общей суммой
+     */
     public Mono<CartView> getCartView(String sessionId) {
         return findActiveCart(sessionId)
-                .switchIfEmpty(
-                        // создаём новую корзину и сохраняем
-                        cartRepository.save(new Cart(null, sessionId, CartStatus.ACTIVE, LocalDateTime.now())))
+                .switchIfEmpty(cartRepository.save(new Cart(null, sessionId, CartStatus.ACTIVE, LocalDateTime.now())))
                 .flatMap(cart -> cartItemRepository.findByCartId(cart.getId())
                         .flatMap(item -> productRepository.findById(item.getProductId())
                                 .map(product -> new CartItemView(item, product)))
@@ -131,6 +165,12 @@ public class CartService {
                         }));
     }
 
+    /**
+     * Оформление заказа (checkout) — перевод корзины в статус COMPLETED.
+     *
+     * @param sessionId идентификатор сессии пользователя
+     * @return обновлённая корзина со статусом COMPLETED
+     */
     @Transactional
     public Mono<Cart> checkout(String sessionId) {
         return cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)

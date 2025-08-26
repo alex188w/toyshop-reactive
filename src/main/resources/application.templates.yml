@@ -4,7 +4,12 @@ spring:
   application:
     name: toyshop
   r2dbc:
-    url: r2dbc:postgresql://localhost:5432/toyshop
+    # для для локального запуска приложения (на Виндовс) на встроенном сервлет-контейнере Spring Boot
+    # url: r2dbc:postgresql://localhost:5432/toyshop
+
+    # для запуска внутри контейнера Докер и обращанием к БД на Виндовс
+    # url: r2dbc:postgresql://db:5432/toyshop
+    url: r2dbc:postgresql://host.docker.internal:5432/toyshop
     username: your_userName
     password: your_userPassword
   sql:

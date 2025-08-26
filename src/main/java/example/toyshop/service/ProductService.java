@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import example.toyshop.model.Product;
 import example.toyshop.repository.ProductRepository;
@@ -17,16 +18,34 @@ import java.nio.file.Paths;
 @Service
 @RequiredArgsConstructor
 public class ProductService {
+
     private final ProductRepository repo;
 
+    /**
+     * Получить все товары.
+     *
+     * @return Flux всех товаров.
+     */
     public Flux<Product> getAll() {
         return repo.findAll();
     }
 
+    /**
+     * Поиск товаров по части имени (без учёта регистра).
+     *
+     * @param q подстрока для поиска
+     * @return Flux найденных товаров
+     */
     public Flux<Product> search(String q) {
         return repo.findByNameContainingIgnoreCase(q);
     }
 
+    /**
+     * Сохранить загруженное изображение в папку uploads.
+     *
+     * @param file загруженный файл (FilePart WebFlux)
+     * @return путь для сохранения в сущности Product
+     */
     public Mono<String> saveImage(FilePart file) {
         if (file == null)
             return Mono.just("");
@@ -41,11 +60,26 @@ public class ProductService {
                 .then(Mono.just("/uploads/" + filename));
     }
 
+    /**
+     * Сохранить или обновить товар.
+     * <p>
+     * Транзакция нужна, если метод изменяет данные в базе.
+     *
+     * @param product товар для сохранения
+     * @return Mono сохранённого товара
+     */
+    @Transactional
     public Mono<Product> save(Product product) {
         return repo.save(product);
     }
 
-        public Mono<Product> getById(Long id) {
+    /**
+     * Получить товар по идентификатору.
+     *
+     * @param id идентификатор товара
+     * @return Mono с товаром или пустым, если не найден
+     */
+    public Mono<Product> getById(Long id) {
         return repo.findById(id);
     }
 }

@@ -18,6 +18,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+/**
+ * Контроллер для управления товарами в магазине.
+ * <p>
+ * Обрабатывает отображение списка товаров, просмотр конкретного товара
+ * и добавление нового товара.
+ * Также интегрируется с {@link CartService}, чтобы показывать количество
+ * товаров в корзине.
+ */
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/products")
@@ -26,6 +34,21 @@ public class ProductController {
     private final ProductService service;
     private final CartService cartService;
 
+    /**
+     * Отображает список товаров с возможностью поиска, сортировки и ограничения по
+     * размеру выборки.
+     * Также обрабатывает cookie для идентификации корзины покупателя.
+     *
+     * @param sessionId идентификатор сессии корзины (берётся из cookie, может быть
+     *                  null)
+     * @param response  HTTP-ответ (для установки cookie при первой загрузке)
+     * @param keyword   ключевое слово для фильтрации по названию (опционально)
+     * @param sort      порядок сортировки (name_asc, name_desc, price_asc,
+     *                  price_desc)
+     * @param size      количество товаров для отображения
+     * @param model     модель MVC для передачи данных в шаблон
+     * @return имя HTML-шаблона {@code products}
+     */
     @GetMapping
     public Mono<String> listProducts(
             @CookieValue(name = "CART_SESSION", required = false) String sessionId,
@@ -84,11 +107,25 @@ public class ProductController {
                 });
     }
 
+    /**
+     * Отображает HTML-форму для добавления нового товара.
+     *
+     * @return имя HTML-шаблона {@code add-product}
+     */
     @GetMapping("/add")
     public String addForm() {
         return "add-product";
     }
 
+    /**
+     * Обрабатывает отправку формы добавления товара.
+     * Если прикреплено изображение — сохраняет его, иначе задаёт пустую строку в
+     * imageUrl.
+     *
+     * @param form форма с данными товара (название, описание, цена, количество,
+     *             изображение)
+     * @return перенаправление на страницу списка товаров
+     */
     @PostMapping("/add")
     public Mono<String> addProduct(@ModelAttribute ProductForm form) {
         FilePart file = form.getFile();
@@ -111,6 +148,13 @@ public class ProductController {
         }).thenReturn("redirect:/products");
     }
 
+    /**
+     * Отображает страницу с деталями конкретного товара.
+     *
+     * @param id    идентификатор товара
+     * @param model модель MVC для передачи данных в шаблон
+     * @return имя HTML-шаблона {@code product}
+     */
     @GetMapping("/{id}")
     public Mono<String> getProduct(@PathVariable Long id, Model model) {
         return service.getById(id)
