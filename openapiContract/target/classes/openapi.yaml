@@ -1,0 +1,172 @@
+openapi: 3.0.3
+info:
+  title: Payment Service API
+  version: 1.0.0
+  description: >
+    API сервиса платежей для оформления заказов.
+    Предоставляет три эндпоинта:
+    - получение баланса на счёте
+    - осуществление платежа
+    - подтверждение заказа после успешной оплаты
+
+servers:
+  - url: http://localhost:8081
+    description: Локальный сервер платежей
+
+paths:
+  /balance:
+    get:
+      tags:
+        - Balance
+      summary: Получить баланс счёта
+      description: Возвращает текущий баланс пользователя.
+      responses:
+        '200':
+          description: Баланс успешно получен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceResponse'
+        '500':
+          description: Ошибка сервиса
+          
+  /pay:
+    post:
+      tags:
+        - Payment
+      summary: Инициировать оплату заказа
+      description: Получает данные заказа и возвращает результат оплаты.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        '200':
+          description: Успешная оплата
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '400':
+          description: Ошибка в запросе
+        '402':
+          description: Недостаточно средств
+        '500':
+          description: Ошибка сервиса
+
+  /confirm:
+    post:
+      tags:
+        - Confirm
+      summary: Подтвердить оформление заказа
+      description: >
+        Эмулирует процесс оформления заказа после успешной оплаты.
+        Возвращает сведения о заказе и статус подтверждения.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmRequest'
+      responses:
+        '200':
+          description: Заказ успешно оформлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfirmResponse'
+        '400':
+          description: Ошибка в запросе
+        '500':
+          description: Ошибка сервиса
+
+components:
+  schemas:
+    BalanceResponse:
+      type: object
+      properties:
+        balance:
+          type: number
+          format: double
+          example: 50000.00
+        currency:
+          type: string
+          example: "RUB"
+      required:
+        - balance
+        - currency
+
+    PaymentRequest:
+      type: object
+      properties:
+        orderId:
+          type: string
+          example: "12345"
+        amount:
+          type: number
+          format: double
+          example: 99.99
+        currency:
+          type: string
+          example: "RUB"
+        method:
+          type: string
+          description: Способ оплаты (например, CARD, PAYPAL, etc.)
+          example: "CARD"
+      required:
+        - orderId
+        - amount
+        - currency
+        - method
+
+    PaymentResponse:
+      type: object
+      properties:
+        transactionId:
+          type: string
+          example: "tx_987654"
+        status:
+          type: string
+          enum: [SUCCESS, FAILED]
+          example: "SUCCESS"
+        message:
+          type: string
+          example: "Оплата успешно проведена"
+      required:
+        - transactionId
+        - status
+
+    ConfirmRequest:
+      type: object
+      properties:
+        orderId:
+          type: string
+          example: "12345"
+        transactionId:
+          type: string
+          example: "tx_987654"
+      required:
+        - orderId
+        - transactionId
+
+    ConfirmResponse:
+      type: object
+      properties:
+        orderId:
+          type: string
+          example: "12345"
+        transactionId:
+          type: string
+          example: "tx_987654"
+        confirmed:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Заказ успешно оформлен"
+      required:
+        - orderId
+        - transactionId
+        - confirmed

@@ -1,0 +1,189 @@
+openapi: 3.0.3
+info:
+  description: |
+    API сервиса платежей для оформления заказов. Предоставляет три эндпоинта: - получение баланса на счёте - осуществление платежа - подтверждение заказа после успешной оплаты
+  title: Payment Service API
+  version: 1.0.0
+servers:
+- description: Локальный сервер платежей
+  url: http://localhost:8081
+paths:
+  /balance:
+    get:
+      description: Возвращает текущий баланс пользователя.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceResponse'
+          description: Баланс успешно получен
+        "500":
+          description: Ошибка сервиса
+      summary: Получить баланс счёта
+      tags:
+      - Balance
+      x-accepts:
+      - application/json
+  /pay:
+    post:
+      description: Получает данные заказа и возвращает результат оплаты.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+          description: Успешная оплата
+        "400":
+          description: Ошибка в запросе
+        "402":
+          description: Недостаточно средств
+        "500":
+          description: Ошибка сервиса
+      summary: Инициировать оплату заказа
+      tags:
+      - Payment
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+  /confirm:
+    post:
+      description: |
+        Эмулирует процесс оформления заказа после успешной оплаты. Возвращает сведения о заказе и статус подтверждения.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfirmResponse'
+          description: Заказ успешно оформлен
+        "400":
+          description: Ошибка в запросе
+        "500":
+          description: Ошибка сервиса
+      summary: Подтвердить оформление заказа
+      tags:
+      - Confirm
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+components:
+  schemas:
+    BalanceResponse:
+      example:
+        balance: 50000.0
+        currency: RUB
+      properties:
+        balance:
+          example: 50000.0
+          format: double
+          type: number
+        currency:
+          example: RUB
+          type: string
+      required:
+      - balance
+      - currency
+      type: object
+    PaymentRequest:
+      example:
+        amount: 99.99
+        method: CARD
+        orderId: "12345"
+        currency: RUB
+      properties:
+        orderId:
+          example: "12345"
+          type: string
+        amount:
+          example: 99.99
+          format: double
+          type: number
+        currency:
+          example: RUB
+          type: string
+        method:
+          description: "Способ оплаты (например, CARD, PAYPAL, etc.)"
+          example: CARD
+          type: string
+      required:
+      - amount
+      - currency
+      - method
+      - orderId
+      type: object
+    PaymentResponse:
+      example:
+        message: Оплата успешно проведена
+        transactionId: tx_987654
+        status: SUCCESS
+      properties:
+        transactionId:
+          example: tx_987654
+          type: string
+        status:
+          enum:
+          - SUCCESS
+          - FAILED
+          example: SUCCESS
+          type: string
+        message:
+          example: Оплата успешно проведена
+          type: string
+      required:
+      - status
+      - transactionId
+      type: object
+    ConfirmRequest:
+      example:
+        orderId: "12345"
+        transactionId: tx_987654
+      properties:
+        orderId:
+          example: "12345"
+          type: string
+        transactionId:
+          example: tx_987654
+          type: string
+      required:
+      - orderId
+      - transactionId
+      type: object
+    ConfirmResponse:
+      example:
+        orderId: "12345"
+        message: Заказ успешно оформлен
+        confirmed: true
+        transactionId: tx_987654
+      properties:
+        orderId:
+          example: "12345"
+          type: string
+        transactionId:
+          example: tx_987654
+          type: string
+        confirmed:
+          example: true
+          type: boolean
+        message:
+          example: Заказ успешно оформлен
+          type: string
+      required:
+      - confirmed
+      - orderId
+      - transactionId
+      type: object
+

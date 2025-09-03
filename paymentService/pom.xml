@@ -15,6 +15,12 @@
     <description>Сервис платежей для мульти-модульного проекта Toyshop</description>
 
     <dependencies>
+        <dependency>
+            <groupId>com.example</groupId>
+            <artifactId>openapiContract</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        
         <!-- Spring WebFlux -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
