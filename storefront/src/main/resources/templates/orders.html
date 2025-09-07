@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <title>История заказов</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
 </head>
+
 <body>
     <h2>История заказов</h2>
 
@@ -14,7 +16,7 @@
 
     <div th:each="order : ${orders}">
         <h3>
-            Заказ #[[${order.id}]] — 
+            Заказ #[[${order.id}]] —
             [[${#temporals.format(order.createdAt, 'dd.MM.yyyy HH:mm')}]]
         </h3>
 
@@ -44,11 +46,16 @@
         <p>
             <a th:href="@{'/orders/' + ${order.id}}">Смотреть заказ</a>
         </p>
-        <hr/>
+        <hr />
     </div>
+
+    <p th:if="${currentBalance != null}">
+        Ваш текущий баланс: <span th:text="${currentBalance} + ' ₽'"></span>
+    </p>
 
     <div style="margin-top: 30px;">
         <a href="/products">← Вернуться к товарам</a>
     </div>
 </body>
+
 </html>

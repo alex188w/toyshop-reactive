@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.server.WebSession;
 
 import example.toyshop.dto.cart.CartItemView;
 import example.toyshop.dto.cart.OrderView;
@@ -11,6 +12,7 @@ import example.toyshop.model.CartStatus;
 import example.toyshop.repository.CartItemRepository;
 import example.toyshop.repository.CartRepository;
 import example.toyshop.repository.ProductRepository;
+import example.toyshop.service.PaymentServiceClient;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -33,6 +35,7 @@ public class OrderController {
         private final CartRepository cartRepository;
         private final CartItemRepository cartItemRepository;
         private final ProductRepository productRepository;
+        private final PaymentServiceClient paymentServiceClient;
 
         /**
          * Отображает список всех завершённых заказов.
@@ -72,7 +75,9 @@ public class OrderController {
          * @return имя HTML-шаблона {@code order}
          */
         @GetMapping("/{id}")
-        public Mono<String> viewOrder(@PathVariable Long id, Model model) {
+        public Mono<String> viewOrder(@PathVariable Long id,
+                        WebSession session,
+                        Model model) {
                 return cartRepository.findById(id)
                                 .switchIfEmpty(Mono.error(
                                                 new ResponseStatusException(HttpStatus.NOT_FOUND, "Заказ не найден")))
@@ -81,9 +86,19 @@ public class OrderController {
                                                                 .map(product -> new CartItemView(ci, product)))
                                                 .collectList()
                                                 .map(items -> new OrderView(cart, items)))
-                                .map(orderView -> {
-                                        model.addAttribute("order", orderView); // <-- OrderView кладём
-                                        return "order";
-                                });
+                                .flatMap(orderView ->
+                                // Всегда получаем актуальный баланс с paymentService
+                                paymentServiceClient.getBalance()
+                                                .map(balance -> {
+                                                        model.addAttribute("order", orderView);
+                                                        model.addAttribute("currentBalance", balance.getBalance());
+
+                                                        // обновить сессию 
+                                                        session.getAttributes().put("currentBalance",
+                                                                        balance.getBalance());
+
+                                                        return "order";
+                                                }));
         }
+
 }

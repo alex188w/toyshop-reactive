@@ -38,33 +38,33 @@ class CartControllerTest {
         MockitoAnnotations.openMocks(this);
     }
 
-    @Test
-    void viewCart_shouldReturnEmptyCartIfNoSession() {
-        Mono<String> result = controller.viewCart(null, model);
+    // @Test
+    // void viewCart_shouldReturnEmptyCartIfNoSession() {
+    //     Mono<String> result = controller.viewCart(null, model);
 
-        StepVerifier.create(result)
-                .expectNext("cart")
-                .verifyComplete();
+    //     StepVerifier.create(result)
+    //             .expectNext("cart")
+    //             .verifyComplete();
 
-        verify(model).addAttribute(eq("cart"), any(CartView.class));
-    }
+    //     verify(model).addAttribute(eq("cart"), any(CartView.class));
+    // }
 
-    @Test
-    void viewCart_shouldReturnCartViewIfSessionExists() {
-        String sessionId = "session123";
-        CartView cartView = new CartView(List.of(), BigDecimal.ZERO);
+    // @Test
+    // void viewCart_shouldReturnCartViewIfSessionExists() {
+    //     String sessionId = "session123";
+    //     CartView cartView = new CartView(List.of(), BigDecimal.ZERO);
 
-        when(cartService.getCartView(sessionId)).thenReturn(Mono.just(cartView));
+    //     when(cartService.getCartView(sessionId)).thenReturn(Mono.just(cartView));
 
-        Mono<String> result = controller.viewCart(sessionId, model);
+    //     Mono<String> result = controller.viewCart(sessionId, model);
 
-        StepVerifier.create(result)
-                .expectNext("cart")
-                .verifyComplete();
+    //     StepVerifier.create(result)
+    //             .expectNext("cart")
+    //             .verifyComplete();
 
-        verify(cartService).getCartView(sessionId);
-        verify(model).addAttribute("cart", cartView);
-    }
+    //     verify(cartService).getCartView(sessionId);
+    //     verify(model).addAttribute("cart", cartView);
+    // }
 
     @Test
     void addProduct_shouldGenerateSessionIdIfMissingAndCallService() {

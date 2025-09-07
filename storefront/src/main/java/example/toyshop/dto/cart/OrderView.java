@@ -7,6 +7,7 @@ import java.util.List;
 import example.toyshop.model.Cart;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 
 /**
@@ -16,26 +17,14 @@ import lombok.Data;
  */
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class OrderView {
-
-    /** Идентификатор заказа */
     private Long id;
-
-    /** Дата и время создания заказа */
     private LocalDateTime createdAt;
-
-    /** Список товаров в заказе */
     private List<CartItemView> items;
-
-    /** Общая сумма заказа */
     private BigDecimal totalAmount;
+    private BigDecimal currentBalance; // новое поле
 
-    /**
-     * Конструктор, создающий {@link OrderView} на основе сущности корзины и списка её элементов.
-     *
-     * @param cart  корзина, преобразованная в заказ
-     * @param items список элементов корзины с данными о товарах
-     */
     public OrderView(Cart cart, List<CartItemView> items) {
         this.id = cart.getId();
         this.createdAt = cart.getCreatedAt();
@@ -43,5 +32,15 @@ public class OrderView {
         this.totalAmount = items.stream()
                 .map(CartItemView::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        this.currentBalance = BigDecimal.ZERO; // по умолчанию
+    }
+
+    // Геттеры и сеттеры
+    public BigDecimal getCurrentBalance() {
+        return currentBalance;
+    }
+
+    public void setCurrentBalance(BigDecimal currentBalance) {
+        this.currentBalance = currentBalance;
     }
 }

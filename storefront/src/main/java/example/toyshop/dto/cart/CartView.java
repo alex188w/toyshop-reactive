@@ -30,5 +30,8 @@ public class CartView {
         this.items = List.of();
         this.totalAmount = BigDecimal.ZERO;
     }
-}
 
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+}

@@ -94,7 +94,9 @@
                     <!-- Клиент на WebClient -->
                     <execution>
                         <id>generate-payment-service-client</id>
-                        <goals><goal>generate</goal></goals>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
                         <configuration>
                             <inputSpec>${project.basedir}/src/main/resources/openapi.yaml</inputSpec>
                             <generatorName>java</generatorName>
@@ -104,26 +106,31 @@
                             <output>${project.build.directory}/generated-sources/client</output>
                             <configOptions>
                                 <useJakartaEe>true</useJakartaEe>
+                                <openApiNullable>false</openApiNullable>
                                 <nullableAnnotation>@jakarta.annotation.Nullable</nullableAnnotation>
                                 <hideGenerationTimestamp>true</hideGenerationTimestamp>
                             </configOptions>
                         </configuration>
                     </execution>
 
-                    <!-- Серверные заглушки Spring Boot -->
+                    <!-- Серверные заглушки Spring WebFlux -->
                     <execution>
                         <id>generate-payment-service-server</id>
-                        <goals><goal>generate</goal></goals>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
                         <configuration>
                             <inputSpec>${project.basedir}/src/main/resources/openapi.yaml</inputSpec>
                             <generatorName>spring</generatorName>
                             <library>spring-boot</library>
                             <interfaceOnly>true</interfaceOnly>
+                            <reactive>true</reactive>
                             <apiPackage>com.example.openapi.server.api</apiPackage>
                             <modelPackage>com.example.openapi.server.model</modelPackage>
                             <output>${project.build.directory}/generated-sources/server</output>
                             <configOptions>
                                 <useJakartaEe>true</useJakartaEe>
+                                <openApiNullable>false</openApiNullable>
                                 <nullableAnnotation>@jakarta.annotation.Nullable</nullableAnnotation>
                                 <hideGenerationTimestamp>true</hideGenerationTimestamp>
                             </configOptions>
@@ -141,7 +148,9 @@
                     <execution>
                         <id>add-sources</id>
                         <phase>generate-sources</phase>
-                        <goals><goal>add-source</goal></goals>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
                         <configuration>
                             <sources>
                                 <source>${project.build.directory}/generated-sources/client/src/main/java</source>

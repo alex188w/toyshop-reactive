@@ -6,10 +6,10 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class PaymentClientConfig {
-
     @Bean
     public ApiClient paymentApiClient() {
-        return new ApiClient()
-                .setBasePath("http://localhost:8081"); // адрес paymentService
+        ApiClient client = new ApiClient();
+        client.setBasePath("http://localhost:8081"); // важно!
+        return client;
     }
 }
