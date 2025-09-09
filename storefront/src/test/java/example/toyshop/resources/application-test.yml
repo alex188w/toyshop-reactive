@@ -8,5 +8,16 @@
 #       mode: always
 #       schema-locations: classpath:schema.sql
 
-logging.level:
-  org.springframework.jdbc.core.JdbcTemplate: DEBUG # для логирования SQL запросов
+logging:
+  level:
+    root: DEBUG
+
+payment:
+  service:
+    url: http://localhost:8081
+
+spring:
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379

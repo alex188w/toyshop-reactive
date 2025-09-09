@@ -1,7 +1,6 @@
 package example.toyshop.controller;
 
-import example.toyshop.AbstractIntegrationTest;
-import example.toyshop.config.PostgresR2dbcTestcontainer;
+import example.toyshop.IntegrationTestcontainers;
 import example.toyshop.model.Cart;
 import example.toyshop.model.CartStatus;
 import example.toyshop.model.CartItem;
@@ -9,15 +8,25 @@ import example.toyshop.model.Product;
 import example.toyshop.repository.CartItemRepository;
 import example.toyshop.repository.CartRepository;
 import example.toyshop.repository.ProductRepository;
+import example.toyshop.service.PaymentServiceClient;
+import reactor.core.publisher.Mono;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-@SpringJUnitConfig(PostgresR2dbcTestcontainer.class)
-public class OrderControllerIntegrationTest extends AbstractIntegrationTest {
+import com.example.openapi.client.model.BalanceResponse;
+
+@SpringBootTest
+@ActiveProfiles("test")
+@AutoConfigureWebTestClient
+public class OrderControllerIntegrationTest extends IntegrationTestcontainers {
 
     @Autowired
     private WebTestClient webTestClient;
@@ -30,6 +39,9 @@ public class OrderControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @MockitoBean
+    private PaymentServiceClient paymentServiceClient;
 
     private Cart cart;
     private Product product;
@@ -60,6 +72,10 @@ public class OrderControllerIntegrationTest extends AbstractIntegrationTest {
         item.setProductId(product.getId());
         item.setQuantity(2);
         cartItemRepository.save(item).block();
+
+        // Мок для баланса
+        Mockito.when(paymentServiceClient.getBalance())
+                .thenReturn(Mono.just(new BalanceResponse().balance(1000.0)));
     }
 
     @Test

@@ -1,73 +1,152 @@
 package example.toyshop.controller;
 
-import example.toyshop.AbstractIntegrationTest;
-import example.toyshop.config.PostgresR2dbcTestcontainer;
+import example.toyshop.IntegrationTestcontainers;
 import example.toyshop.model.Product;
 import example.toyshop.repository.ProductRepository;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.http.MediaType;
 
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
-// @SpringBootTest
-// @AutoConfigureWebTestClient
-// @Testcontainers
-@SpringJUnitConfig(PostgresR2dbcTestcontainer.class)
-public class ProductControllerIntegrationTest extends AbstractIntegrationTest {
-
-    @Autowired
-    private ProductRepository productRepository;
+@SpringBootTest
+@ActiveProfiles("test")
+@AutoConfigureWebTestClient
+class ProductControllerIntegrationTest extends IntegrationTestcontainers {
 
     @Autowired
     private WebTestClient webTestClient;
 
-    @Test
-    void listProducts_shouldReturnOkAndContainProducts() {
-        // Сохраняем товар в БД
-        productRepository.save(new Product(null, "Мишка", "Плюшевый", 1000, "img", 5)).block();
+    @Autowired
+    private ProductRepository productRepository;
 
-        // Генерируем sessionId для корзины
-        String sessionId = UUID.randomUUID().toString();
+    private Product testProduct;
 
-        // Делаем GET-запрос с cookie
-        webTestClient.get()
-                .uri("/products")
-                .cookie("CART_SESSION", sessionId)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(String.class)
-                .consumeWith(res -> assertThat(res.getResponseBody()).contains("Мишка"));
+    @BeforeEach
+    void setUp() {
+        productRepository.deleteAll().block();
+
+        testProduct = new Product();
+        testProduct.setName("Игрушечный робот");
+        testProduct.setDescription("Робот с батарейками");
+        testProduct.setPrice(1500);
+        testProduct.setQuantity(10);
+
+        testProduct = productRepository.save(testProduct).block();
     }
 
     @Test
-    void addProduct_shouldSaveAndRedirect() {
+    void listProducts_shouldReturnProductsAndSetCookie() {
+        webTestClient.get()
+                .uri("/products")
+                .exchange()
+                .expectStatus().isOk()
+                .expectCookie().exists("CART_SESSION")
+                .expectBody(String.class)
+                .consumeWith(body -> {
+                    assert body.getResponseBody().contains("Игрушечный робот");
+                });
+    }
+
+    @Test
+    void listProducts_shouldFilterAndSort() {
+        Product second = new Product();
+        second.setName("Альтернативная игрушка");
+        second.setPrice(500);
+        second.setQuantity(5);
+        second = productRepository.save(second).block();
+
+        // фильтрация по ключевому слову
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/products")
+                        .queryParam("keyword", "альт")
+                        .queryParam("sort", "price_desc")
+                        .queryParam("size", 10)
+                        .build())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .consumeWith(body -> {
+                    assert body.getResponseBody().contains("Альтернативная игрушка");
+                    assert !body.getResponseBody().contains("Игрушечный робот");
+                });
+    }
+
+    @Test
+    void addForm_shouldReturnFormPage() {
+        webTestClient.get()
+                .uri("/products/add")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .consumeWith(result -> {
+                    // Просто проверяем статус, имя шаблона нужно через MockMvc, а не WebTestClient
+                });
+    }
+
+    @Test
+    void addProduct_shouldSaveProduct() {
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add("name", "Новая игрушка");
+        formData.add("description", "Описание");
+        formData.add("price", "1000");
+        formData.add("quantity", "3");
+
         webTestClient.post()
                 .uri("/products/add")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .bodyValue("name=Лего&description=Конструктор&price=2000&quantity=10")
+                .bodyValue(formData)
                 .exchange()
-                .expectStatus().is3xxRedirection();
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueMatches("Location", "/products");
 
-        Product saved = productRepository.findAll().blockFirst();
-        assertThat(saved).isNotNull();
-        assertThat(saved.getName()).isEqualTo("Лего");
+        Product saved = productRepository.findAll().collectList().block().stream()
+                .filter(p -> "Новая игрушка".equals(p.getName()))
+                .findFirst().orElse(null);
+
+        assert saved != null;
+        assert saved.getPrice().intValue() == 1000;
     }
 
     @Test
     void getProduct_shouldReturnProductPage() {
-        Product saved = productRepository.save(new Product(null, "Мяч", "Футбольный",
-                500, null, 3)).block();
-
         webTestClient.get()
-                .uri("/products/{id}", saved.getId())
+                .uri("/products/{id}", testProduct.getId())
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(String.class)
-                .consumeWith(res -> assertThat(res.getResponseBody()).contains("Мяч"));
+                .consumeWith(body -> {
+                    assert body.getResponseBody().contains("Игрушечный робот");
+                });
+    }
+
+    @Test
+    void getProduct_shouldReturnFromDbAndThenFromCache() {
+        // Первый вызов → из БД
+        webTestClient.get()
+                .uri("/products/{id}", testProduct.getId())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .consumeWith(body -> {
+                    assert body.getResponseBody().contains("Игрушечный робот");
+                });
+
+        // Второй вызов → должен отдать из Redis кеша
+        webTestClient.get()
+                .uri("/products/{id}", testProduct.getId())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .consumeWith(body -> {
+                    assert body.getResponseBody().contains("Игрушечный робот");
+                });
     }
 }

@@ -2,6 +2,7 @@ package example.toyshop.service;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,27 +15,49 @@ import reactor.core.publisher.Flux;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 @RequiredArgsConstructor
 public class ProductService {
 
     private final ProductRepository repo;
+    private final ReactiveRedisTemplate<String, Object> redisTemplate;
+
+    private static final String CACHE_PREFIX = "product:";
+    private static final String CACHE_ALL = CACHE_PREFIX + "all";
+    private static final Duration TTL = Duration.ofMinutes(5);
+    private static final Logger log = LoggerFactory.getLogger(ProductService.class);
 
     /**
      * Получить все товары.
-     *
-     * @return Flux всех товаров.
+     * <p>
+     * Сначала пытаемся взять из Redis, если кэша нет —
+     * берём из базы и кладём в Redis.
      */
     public Flux<Product> getAll() {
-        return repo.findAll();
+        return redisTemplate.opsForList().size(CACHE_ALL)
+                .flatMapMany(size -> {
+                    if (size != null && size > 0) {
+                        return redisTemplate.opsForList()
+                                .range(CACHE_ALL, 0, -1)
+                                .cast(Product.class);
+                    } else {
+                        return repo.findAll()
+                                .collectList()
+                                .flatMapMany(products -> redisTemplate.opsForList()
+                                        .rightPushAll(CACHE_ALL, products.toArray())
+                                        .then(redisTemplate.expire(CACHE_ALL, TTL)) // TTL
+                                        .thenMany(Flux.fromIterable(products)));
+                    }
+                });
     }
 
     /**
      * Поиск товаров по части имени (без учёта регистра).
-     *
-     * @param q подстрока для поиска
-     * @return Flux найденных товаров
      */
     public Flux<Product> search(String q) {
         return repo.findByNameContainingIgnoreCase(q);
@@ -42,9 +65,6 @@ public class ProductService {
 
     /**
      * Сохранить загруженное изображение в папку uploads.
-     *
-     * @param file загруженный файл (FilePart WebFlux)
-     * @return путь для сохранения в сущности Product
      */
     public Mono<String> saveImage(FilePart file) {
         if (file == null)
@@ -62,24 +82,31 @@ public class ProductService {
 
     /**
      * Сохранить или обновить товар.
-     * <p>
-     * Транзакция нужна, если метод изменяет данные в базе.
-     *
-     * @param product товар для сохранения
-     * @return Mono сохранённого товара
+     * После сохранения сбрасываем кэш: сам товар и список всех товаров.
      */
     @Transactional
     public Mono<Product> save(Product product) {
-        return repo.save(product);
+        return repo.save(product)
+                .flatMap(saved -> redisTemplate.delete(CACHE_PREFIX + saved.getId())
+                        .then(redisTemplate.delete(CACHE_ALL))
+                        .thenReturn(saved));
     }
 
     /**
      * Получить товар по идентификатору.
-     *
-     * @param id идентификатор товара
-     * @return Mono с товаром или пустым, если не найден
+     * Сначала ищем в Redis, если нет — в базе и кладём в кэш.
      */
     public Mono<Product> getById(Long id) {
-        return repo.findById(id);
+        String key = CACHE_PREFIX + id;
+
+        return redisTemplate.opsForValue().get(key)
+                .cast(Product.class)
+                .doOnNext(p -> log.info("Из кеша: {}", p.getName()))
+                .switchIfEmpty(
+                        repo.findById(id)
+                                .doOnNext(p -> log.info("Из БД: {}", p.getName()))
+                                .flatMap(product -> redisTemplate.opsForValue()
+                                        .set(key, product, Duration.ofMinutes(5))
+                                        .thenReturn(product)));
     }
 }
