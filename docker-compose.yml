@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:7
+    container_name: toyshop-redis
+    ports:
+      - "6379:6379"
+
+  payment-service:
+    build:
+      context: ./paymentService
+    container_name: payment-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - redis
+
+  storefront:
+    build:
+      context: ./storefront
+    container_name: storefront
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - PAYMENT_SERVICE_URL=http://payment-service:8081
+      - SPRING_REDIS_HOST=redis
+    depends_on:
+      - payment-service
+      - redis
+    volumes:
+      - ./uploads:/app/uploads   # локальная папка монтируется в контейнер
