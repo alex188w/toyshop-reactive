@@ -44,4 +44,5 @@ build/
 
 .env
 
-*.yml
+/storefront/src/main/resources/application-docker.yml
+/storefront/src/main/resources/application-local.yml
