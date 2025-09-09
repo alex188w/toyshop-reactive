@@ -3,15 +3,14 @@ spring:
     static-path-pattern: "/uploads/**"
   application:
     name: toyshop
-  r2dbc:
+  # r2dbc:
     # для для локального запуска приложения (на Виндовс) на встроенном сервлет-контейнере Spring Boot
     # url: r2dbc:postgresql://localhost:5432/toyshop
 
     # для запуска внутри контейнера Докер и обращанием к БД на Виндовс
-    # url: r2dbc:postgresql://db:5432/toyshop
-    url: r2dbc:postgresql://host.docker.internal:5432/toyshop
-    username: your_userName
-    password: your_userPassword
+    # url: r2dbc:postgresql://host.docker.internal:5432/toyshop
+    # username: postgres
+    # password: Fd18091971
   sql:
     init:
       mode: never   # для R2DBC не работает jdbc-инициализация
@@ -19,5 +18,12 @@ spring:
     r2dbc:
       repositories:
         enabled: true
+    redis:
+      # host: redis
+      # port: 6379
+      database: 0
 server:
   port: 8085
+
+
+
