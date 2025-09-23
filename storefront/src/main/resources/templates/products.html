@@ -65,6 +65,10 @@
 </head>
 
 <body class="bg-light">
+    <nav>
+        <div id="user-info"></div>
+        <a href="/logout">Выйти</a>
+    </nav>
 
     <div class="container mt-5">
         <h1 class="mb-4" style="text-align: center;">Витрина товаров</h1>
@@ -156,5 +160,13 @@
     </div>
 
 </body>
+<script>
+    fetch("/me")
+        .then(r => r.json())
+        .then(user => {
+            document.getElementById("user-info").innerText =
+                "Привет, " + user.username;
+        });
+</script>
 
 </html>
