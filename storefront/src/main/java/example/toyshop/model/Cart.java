@@ -30,9 +30,9 @@ public class Cart {
     private Long id;
 
     /** Идентификатор сессии пользователя, используется для привязки корзины */
-    @NotBlank(message = "sessionId обязателен")
-    @Column("session_id")
-    private String sessionId;
+    @NotBlank(message = "userId обязателен")
+    @Column("user_id")
+    private String userId;
 
     /** Статус корзины: {@link CartStatus#ACTIVE} или {@link CartStatus#COMPLETED} */
     private CartStatus status = CartStatus.ACTIVE;

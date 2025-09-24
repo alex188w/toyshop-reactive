@@ -9,7 +9,8 @@ import reactor.core.publisher.Flux;
 /**
  * Репозиторий для работы с элементами корзины {@link CartItem}.
  * <p>
- * Расширяет {@link R2dbcRepository} для асинхронного взаимодействия с базой данных через R2DBC.
+ * Расширяет {@link R2dbcRepository} для асинхронного взаимодействия с базой
+ * данных через R2DBC.
  */
 public interface CartItemRepository extends R2dbcRepository<CartItem, Long> {
 
@@ -29,4 +30,13 @@ public interface CartItemRepository extends R2dbcRepository<CartItem, Long> {
      * @return элемент корзины, если найден
      */
     Mono<CartItem> findByCartIdAndProductId(Long cartId, Long productId);
+
+        /**
+     * Удаляет элемент корзины по идентификатору корзины.
+     *
+     * @param cartId    идентификатор корзины
+     * @param productId идентификатор товара
+     * @return элемент корзины, если найден
+     */
+    Mono<Void> deleteByCartId(Long cartId);
 }

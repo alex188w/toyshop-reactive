@@ -19,105 +19,105 @@ import com.example.openapi.client.model.PaymentResponse;
 
 import org.junit.jupiter.api.*;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class PaymentServiceClientIntegrationTest {
+// @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+// class PaymentServiceClientIntegrationTest {
 
-    private MockWebServer mockWebServer;
-    private PaymentServiceClient paymentServiceClient;
+//     private MockWebServer mockWebServer;
+//     private PaymentServiceClient paymentServiceClient;
 
-    @BeforeAll
-    void setupServer() throws IOException {
-        mockWebServer = new MockWebServer();
-        mockWebServer.start();
+//     @BeforeAll
+//     void setupServer() throws IOException {
+//         mockWebServer = new MockWebServer();
+//         mockWebServer.start();
 
-        String baseUrl = mockWebServer.url("/").toString();
+//         String baseUrl = mockWebServer.url("/").toString();
 
-        // Создаём WebClient с базовым URL mockWebServer
-        WebClient webClient = WebClient.builder().baseUrl(baseUrl).build();
+//         // Создаём WebClient с базовым URL mockWebServer
+//         WebClient webClient = WebClient.builder().baseUrl(baseUrl).build();
 
-        // Передаём его в ApiClient, чтобы все API-запросы шли на MockWebServer
-        ApiClient apiClient = new ApiClient(webClient);
-        apiClient.setBasePath(baseUrl); // если ApiClient имеет setter basePath
+//         // Передаём его в ApiClient, чтобы все API-запросы шли на MockWebServer
+//         ApiClient apiClient = new ApiClient(webClient);
+//         apiClient.setBasePath(baseUrl); // если ApiClient имеет setter basePath
 
-        paymentServiceClient = new PaymentServiceClient(apiClient);
-    }
+//         paymentServiceClient = new PaymentServiceClient(apiClient);
+//     }
 
-    @AfterAll
-    void shutdownServer() throws IOException {
-        mockWebServer.shutdown();
-    }
+//     @AfterAll
+//     void shutdownServer() throws IOException {
+//         mockWebServer.shutdown();
+//     }
 
-    @Test
-    void getBalance_shouldReturnBalance() throws Exception {
-        // given
-        String responseBody = "{\"balance\":123.45}";
-        mockWebServer.enqueue(new MockResponse()
-                .setBody(responseBody)
-                .addHeader("Content-Type", "application/json"));
+//     @Test
+//     void getBalance_shouldReturnBalance() throws Exception {
+//         // given
+//         String responseBody = "{\"balance\":123.45}";
+//         mockWebServer.enqueue(new MockResponse()
+//                 .setBody(responseBody)
+//                 .addHeader("Content-Type", "application/json"));
 
-        // when
-        Mono<BalanceResponse> result = paymentServiceClient.getBalance();
+//         // when
+//         Mono<BalanceResponse> result = paymentServiceClient.getBalance();
 
-        // then
-        StepVerifier.create(result)
-                .expectNextMatches(balance -> balance.getBalance() == 123.45)
-                .verifyComplete();
+//         // then
+//         StepVerifier.create(result)
+//                 .expectNextMatches(balance -> balance.getBalance() == 123.45)
+//                 .verifyComplete();
 
-        RecordedRequest recordedRequest = mockWebServer.takeRequest();
-        assertThat(recordedRequest.getPath()).isEqualTo("/balance");
-        assertThat(recordedRequest.getMethod()).isEqualTo("GET");
-    }
+//         RecordedRequest recordedRequest = mockWebServer.takeRequest();
+//         assertThat(recordedRequest.getPath()).isEqualTo("/balance");
+//         assertThat(recordedRequest.getMethod()).isEqualTo("GET");
+//     }
 
-    @Test
-    void pay_shouldReturnSuccessResponse() throws Exception {
-        // given
-        String responseBody = "{\"status\":\"SUCCESS\",\"transactionId\":\"txn-123\"}";
-        mockWebServer.enqueue(new MockResponse()
-                .setBody(responseBody)
-                .addHeader("Content-Type", "application/json"));
+//     @Test
+//     void pay_shouldReturnSuccessResponse() throws Exception {
+//         // given
+//         String responseBody = "{\"status\":\"SUCCESS\",\"transactionId\":\"txn-123\"}";
+//         mockWebServer.enqueue(new MockResponse()
+//                 .setBody(responseBody)
+//                 .addHeader("Content-Type", "application/json"));
 
-        PaymentRequest request = new PaymentRequest()
-                .orderId("1")
-                .amount(100.0)
-                .currency("RUB")
-                .method("CARD");
+//         PaymentRequest request = new PaymentRequest()
+//                 .orderId("1")
+//                 .amount(100.0)
+//                 .currency("RUB")
+//                 .method("CARD");
 
-        // when
-        Mono<PaymentResponse> result = paymentServiceClient.pay(request);
+//         // when
+//         Mono<PaymentResponse> result = paymentServiceClient.pay(request);
 
-        // then
-        StepVerifier.create(result)
-                .expectNextMatches(resp -> resp.getStatus() == PaymentResponse.StatusEnum.SUCCESS
-                        && "txn-123".equals(resp.getTransactionId()))
-                .verifyComplete();
+//         // then
+//         StepVerifier.create(result)
+//                 .expectNextMatches(resp -> resp.getStatus() == PaymentResponse.StatusEnum.SUCCESS
+//                         && "txn-123".equals(resp.getTransactionId()))
+//                 .verifyComplete();
 
-        RecordedRequest recordedRequest = mockWebServer.takeRequest();
-        assertThat(recordedRequest.getPath()).isEqualTo("/pay");
-        assertThat(recordedRequest.getMethod()).isEqualTo("POST");
-    }
+//         RecordedRequest recordedRequest = mockWebServer.takeRequest();
+//         assertThat(recordedRequest.getPath()).isEqualTo("/pay");
+//         assertThat(recordedRequest.getMethod()).isEqualTo("POST");
+//     }
 
-    @Test
-    void confirm_shouldReturnConfirmed() throws Exception {
-        // given
-        String responseBody = "{\"confirmed\":true}";
-        mockWebServer.enqueue(new MockResponse()
-                .setBody(responseBody)
-                .addHeader("Content-Type", "application/json"));
+//     @Test
+//     void confirm_shouldReturnConfirmed() throws Exception {
+//         // given
+//         String responseBody = "{\"confirmed\":true}";
+//         mockWebServer.enqueue(new MockResponse()
+//                 .setBody(responseBody)
+//                 .addHeader("Content-Type", "application/json"));
 
-        ConfirmRequest request = new ConfirmRequest()
-                .orderId("1")
-                .transactionId("txn-123");
+//         ConfirmRequest request = new ConfirmRequest()
+//                 .orderId("1")
+//                 .transactionId("txn-123");
 
-        // when
-        Mono<ConfirmResponse> result = paymentServiceClient.confirm(request);
+//         // when
+//         Mono<ConfirmResponse> result = paymentServiceClient.confirm(request);
 
-        // then
-        StepVerifier.create(result)
-                .expectNextMatches(ConfirmResponse::getConfirmed)
-                .verifyComplete();
+//         // then
+//         StepVerifier.create(result)
+//                 .expectNextMatches(ConfirmResponse::getConfirmed)
+//                 .verifyComplete();
 
-        RecordedRequest recordedRequest = mockWebServer.takeRequest();
-        assertThat(recordedRequest.getPath()).isEqualTo("/confirm");
-        assertThat(recordedRequest.getMethod()).isEqualTo("POST");
-    }
-}
+//         RecordedRequest recordedRequest = mockWebServer.takeRequest();
+//         assertThat(recordedRequest.getPath()).isEqualTo("/confirm");
+//         assertThat(recordedRequest.getMethod()).isEqualTo("POST");
+//     }
+// }

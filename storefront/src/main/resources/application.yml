@@ -12,10 +12,19 @@ spring:
             authorization-grant-type: authorization_code
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
             scope: openid, profile, email
+
+          payment-client: # <--- добавляем клиента для client_credentials
+            client-id: payment-service
+            client-secret: 0LeX2O3gxd01NpazdEiLYLJEBonXy7hZ
+            authorization-grant-type: client_credentials
+            scope: payments.read,payments.write
+            provider: keycloak
+
         provider:
           keycloak:
             # ⚠️ для продакшена/докера можно вернуть https://keycloak.example.com
             issuer-uri: http://localhost:8080/realms/toyshop
+            token-uri: http://localhost:8080/realms/toyshop/protocol/openid-connect/token
 
   webflux:
     static-path-pattern: "/uploads/**"

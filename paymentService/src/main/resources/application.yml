@@ -1,10 +1,38 @@
 spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: https://keycloak.example.com/realms/toyshop
   application:
     name: paymentService
+
+  security:
+    oauth2:
+      client:
+        registration:
+          payment-client:
+            client-id: payment-service
+            client-secret: 0LeX2O3gxd01NpazdEiLYLJEBonXy7hZ
+            authorization-grant-type: client_credentials
+            scope: payments.read,payments.write   # запятая, а не пробел
+            provider: keycloak
+        provider:
+          keycloak:
+            token-uri: http://localhost:8080/realms/toyshop/protocol/openid-connect/token
+
 server:
   port: 8081
+
+# Swagger / Springdoc OpenAPI
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    oauth:
+      client-id: payment-service
+      use-pkce-with-authorization-code-grant: true
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.web.reactive.function.client: DEBUG
+    example.paymentService: DEBUG   # свои пакеты тоже можно включить

@@ -13,6 +13,8 @@ import java.util.UUID;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -51,22 +53,13 @@ public class ProductController {
      */
     @GetMapping
     public Mono<String> listProducts(
-            @CookieValue(name = "CART_SESSION", required = false) String sessionId,
-            ServerHttpResponse response,
+            @AuthenticationPrincipal OidcUser oidcUser,
             @RequestParam(name = "keyword", required = false) String keyword,
             @RequestParam(name = "sort", defaultValue = "name_asc") String sort,
             @RequestParam(name = "size", defaultValue = "10") int size,
             Model model) {
 
-        // Генерация sessionId, если нет
-        if (sessionId == null) {
-            sessionId = UUID.randomUUID().toString();
-            ResponseCookie cookie = ResponseCookie.from("CART_SESSION", sessionId)
-                    .path("/")
-                    .httpOnly(true)
-                    .build();
-            response.addCookie(cookie);
-        }
+        String userId = oidcUser != null ? oidcUser.getSubject() : "guest";
 
         Mono<List<Product>> productsMono = service.getAll()
                 .filter(p -> keyword == null || p.getName().toLowerCase().contains(keyword.toLowerCase()))
@@ -86,7 +79,7 @@ public class ProductController {
                 .take(size)
                 .collectList();
 
-        Mono<CartView> cartMono = cartService.getCartView(sessionId);
+        Mono<CartView> cartMono = cartService.getCartView(userId);
 
         return Mono.zip(productsMono, cartMono)
                 .map(tuple -> {

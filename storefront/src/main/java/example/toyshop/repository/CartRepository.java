@@ -21,7 +21,7 @@ public interface CartRepository extends R2dbcRepository<Cart, Long> {
      * @param status    статус корзины ({@link CartStatus})
      * @return корзина, если найдена
      */
-    Mono<Cart> findBySessionIdAndStatus(String sessionId, CartStatus status);
+    Mono<Cart> findByUserIdAndStatus(String sessionId, CartStatus status);
 
     /**
      * Находит все корзины с указанным статусом.

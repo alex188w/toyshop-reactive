@@ -23,8 +23,17 @@ public class SecurityConfig {
                         ReactiveClientRegistrationRepository clientRegistrationRepository) {
 
                 return http
-                                .authorizeExchange(exchange -> exchange
-                                                .pathMatchers("/", "/info", "/help").permitAll()
+                                .csrf(ServerHttpSecurity.CsrfSpec::disable) // отключаем для WebFlux + OAuth2
+                                .authorizeExchange(exchanges -> exchanges
+                                                // публичные страницы
+                                                .pathMatchers("/", "/login", "/products", "/css/**", "/js/**",
+                                                                "/uploads/**", "/me")
+                                                .permitAll()
+                                                // доступ только админу
+                                                .pathMatchers("/admin/**").hasRole("admin")
+                                                // доступ только авторизованному пользователю
+                                                .pathMatchers("/cart/**", "/orders/**", "/checkout/**").authenticated()
+                                                // остальное — по умолчанию авторизация
                                                 .anyExchange().authenticated())
                                 .oauth2Login(oauth2 -> oauth2
                                                 .authenticationSuccessHandler(
@@ -35,15 +44,16 @@ public class SecurityConfig {
                                 .build();
         }
 
-        private ServerLogoutSuccessHandler oidcLogoutSuccessHandler(
+        @Bean
+        public ServerLogoutSuccessHandler oidcLogoutSuccessHandler(
                         ReactiveClientRegistrationRepository clientRegistrationRepository) {
-                OidcClientInitiatedServerLogoutSuccessHandler successHandler = new OidcClientInitiatedServerLogoutSuccessHandler(
+
+                OidcClientInitiatedServerLogoutSuccessHandler logoutSuccessHandler = new OidcClientInitiatedServerLogoutSuccessHandler(
                                 clientRegistrationRepository);
 
-                // Куда редиректить после успешного logout в Keycloak
-                successHandler.setPostLogoutRedirectUri("{baseUrl}/login");
-                return successHandler;
+                // Указываем куда редиректить после logout (гость)
+                logoutSuccessHandler.setPostLogoutRedirectUri("{baseUrl}/products");
+
+                return logoutSuccessHandler;
         }
 }
-
-
