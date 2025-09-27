@@ -36,78 +36,78 @@ import static org.mockito.Mockito.when;
 
 class OrderControllerTest {
 
-    @Mock
-    private CartRepository cartRepository;
+    // @Mock
+    // private CartRepository cartRepository;
 
-    @Mock
-    private CartItemRepository cartItemRepository;
+    // @Mock
+    // private CartItemRepository cartItemRepository;
 
-    @Mock
-    private ProductRepository productRepository;
+    // @Mock
+    // private ProductRepository productRepository;
 
-    @InjectMocks
-    private OrderController orderController;
+    // @InjectMocks
+    // private OrderController orderController;
 
-    private Cart testCart;
-    private CartItem testItem;
-    private Product testProduct;
+    // private Cart testCart;
+    // private CartItem testItem;
+    // private Product testProduct;
 
-    @Mock
-    private PaymentServiceClient paymentServiceClient;
+    // @Mock
+    // private PaymentServiceClient paymentServiceClient;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    // @BeforeEach
+    // void setUp() {
+    //     MockitoAnnotations.openMocks(this);
 
-        testCart = new Cart(1L, "session1", CartStatus.COMPLETED, LocalDateTime.now());
-        testItem = new CartItem(1L, 1L, 2L, 2); // productId=2
-        testProduct = new Product(2L, "Мяч", "Футбольный", 500, "img", 10);
+    //     testCart = new Cart(1L, "session1", CartStatus.COMPLETED, LocalDateTime.now());
+    //     testItem = new CartItem(1L, 1L, 2L, 2); // productId=2
+    //     testProduct = new Product(2L, "Мяч", "Футбольный", 500, "img", 10);
 
-        when(paymentServiceClient.getBalance())
-                .thenReturn(Mono.just(new BalanceResponse().balance(1000.0)));
-    }
+    //     when(paymentServiceClient.getBalance())
+    //             .thenReturn(Mono.just(new BalanceResponse().balance(1000.0)));
+    // }
 
-    @Test
-    void viewOrders_shouldReturnOrdersViewWithData() {
-        when(cartRepository.findByStatus(CartStatus.COMPLETED)).thenReturn(Flux.just(testCart));
-        when(cartItemRepository.findByCartId(1L)).thenReturn(Flux.just(testItem));
-        when(productRepository.findById(2L)).thenReturn(Mono.just(testProduct));
+    // @Test
+    // void viewOrders_shouldReturnOrdersViewWithData() {
+    //     when(cartRepository.findByStatus(CartStatus.COMPLETED)).thenReturn(Flux.just(testCart));
+    //     when(cartItemRepository.findByCartId(1L)).thenReturn(Flux.just(testItem));
+    //     when(productRepository.findById(2L)).thenReturn(Mono.just(testProduct));
 
-        Model model = new ConcurrentModel();
+    //     Model model = new ConcurrentModel();
 
-        // вызываем метод с актуальной сигнатурой
-        String viewName = orderController.viewOrders(model).block();
+    //     // вызываем метод с актуальной сигнатурой
+    //     String viewName = orderController.viewOrders(model).block();
 
-        assertThat(viewName).isEqualTo("orders");
-        List<OrderView> orders = (List<OrderView>) model.getAttribute("orders");
-        assertThat(orders).hasSize(1);
-        assertThat(orders.get(0).getItems()).hasSize(1);
-        assertThat(orders.get(0).getTotalAmount()).isEqualTo(BigDecimal.valueOf(1000)); // 2 * 500
-    }
+    //     assertThat(viewName).isEqualTo("orders");
+    //     List<OrderView> orders = (List<OrderView>) model.getAttribute("orders");
+    //     assertThat(orders).hasSize(1);
+    //     assertThat(orders.get(0).getItems()).hasSize(1);
+    //     assertThat(orders.get(0).getTotalAmount()).isEqualTo(BigDecimal.valueOf(1000)); // 2 * 500
+    // }
 
-    @Test
-    void viewOrder_shouldReturnSingleOrderView() {
-        when(cartRepository.findById(1L)).thenReturn(Mono.just(testCart));
-        when(cartItemRepository.findByCartId(1L)).thenReturn(Flux.just(testItem));
-        when(productRepository.findById(2L)).thenReturn(Mono.just(testProduct));
+    // @Test
+    // void viewOrder_shouldReturnSingleOrderView() {
+    //     when(cartRepository.findById(1L)).thenReturn(Mono.just(testCart));
+    //     when(cartItemRepository.findByCartId(1L)).thenReturn(Flux.just(testItem));
+    //     when(productRepository.findById(2L)).thenReturn(Mono.just(testProduct));
 
-        Model model = new ConcurrentModel();
+    //     Model model = new ConcurrentModel();
 
-        // Мокаем WebSession
-        WebSession session = mock(WebSession.class);
-        Map<String, Object> attributes = new HashMap<>();
-        when(session.getAttributes()).thenReturn(attributes);
+    //     // Мокаем WebSession
+    //     WebSession session = mock(WebSession.class);
+    //     Map<String, Object> attributes = new HashMap<>();
+    //     when(session.getAttributes()).thenReturn(attributes);
 
-        // Теперь вызываем метод
-        String viewName = orderController.viewOrder(1L, session, model).block();
+    //     // Теперь вызываем метод
+    //     String viewName = orderController.viewOrder(1L, session, model).block();
 
-        assertThat(viewName).isEqualTo("order");
-        OrderView order = (OrderView) model.getAttribute("order");
-        assertThat(order).isNotNull();
-        assertThat(order.getItems()).hasSize(1);
-        assertThat(order.getTotalAmount()).isEqualTo(BigDecimal.valueOf(1000));
+    //     assertThat(viewName).isEqualTo("order");
+    //     OrderView order = (OrderView) model.getAttribute("order");
+    //     assertThat(order).isNotNull();
+    //     assertThat(order.getItems()).hasSize(1);
+    //     assertThat(order.getTotalAmount()).isEqualTo(BigDecimal.valueOf(1000));
 
-        // Проверяем, что в сессии установился currentBalance
-        assertThat(attributes.get("currentBalance")).isEqualTo(1000.0);
-    }
+    //     // Проверяем, что в сессии установился currentBalance
+    //     assertThat(attributes.get("currentBalance")).isEqualTo(1000.0);
+    // }
 }

@@ -34,6 +34,16 @@
             font-size: 16px;
         }
 
+        /* стиль для неактивной кнопки */
+        button:disabled {
+            background-color: #cccccc;
+            /* серый фон */
+            color: #666666;
+            /* текст потускнел */
+            cursor: not-allowed;
+            /* курсор запрещено */
+        }
+
         .button-leight {
             background-color: #007bff;
             color: white;
@@ -50,6 +60,17 @@
             justify-content: space-between;
         }
 
+        #user-info {
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        .navigation-order {
+            display: flex;
+            justify-content: right;
+            margin-bottom: 25px;
+        }
+
         .navigation {
             width: 100%;
             display: flex;
@@ -60,6 +81,12 @@
             margin: auto;
             /* style="width: 60%; margin: auto;" */
             margin-bottom: 25px;
+        }
+
+        .add {
+            display: flex;
+            justify-content: left;
+            height: 55px;
         }
 
         .order {
@@ -82,12 +109,13 @@
         </div>
 
         <h1 class="mb-4" style="text-align: center;">Витрина товаров</h1>
-        <div class="navigation">
-
+        <div class="add">
             <!-- Показываем только для админа -->
             <form style="display: none;" id="add-product-form" action="/products/add" method="get">
                 <button class="button-add" type="submit">Добавить товар на витрину магазина</button>
             </form>
+        </div>
+        <div class="navigation-order">
             <div class="order">
                 <a href="/cart" style="float:right;">
                     <b>Корзина (<span th:text="${cartTotalQuantity}">0</span>)</b>
@@ -184,6 +212,7 @@
             const signupLink = document.getElementById('signup-link');
             const logoutLink = document.getElementById('logout-link');
             const buttons = document.querySelectorAll('.add-to-cart-btn');
+            const addProductForm = document.getElementById('add-product-form');
 
             if (data.username && data.username !== 'Гость') {
                 // ✅ авторизован
@@ -204,12 +233,37 @@
                 // делаем все кнопки неактивными
                 buttons.forEach(btn => btn.disabled = true);
             }
+
+            // показываем форму добавления только для admin
+            if (data.username === 'admin') {
+                addProductForm.style.display = 'block';
+            } else {
+                addProductForm.style.display = 'none';
+            }
         } catch (err) {
             console.error('Ошибка при получении информации о пользователе:', err);
         }
     }
 
     updateUserInfo();
+
+    // Скрипт для отображения товаров в корзине
+    document.querySelectorAll('.cart-form').forEach(form => {
+        form.addEventListener('submit', async e => {
+            e.preventDefault();
+            const url = form.action;
+            try {
+                const res = await fetch(url, { method: 'POST', credentials: 'include' });
+                if (res.ok) {
+                    const qtySpan = document.querySelector('b span');
+                    const current = parseInt(qtySpan.textContent);
+                    qtySpan.textContent = current + 1;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        });
+    });
 </script>
 
 </html>

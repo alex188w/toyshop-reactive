@@ -30,4 +30,12 @@ public interface CartRepository extends R2dbcRepository<Cart, Long> {
      * @return поток корзин с указанным статусом
      */
     Flux<Cart> findByStatus(CartStatus status);
+
+        /**
+     * Находит все корзины с указанным статусом для пользователя с userId.
+     *
+     * @param status статус корзины
+     * @return поток корзин с указанным статусом
+     */
+    Flux<Cart> findByStatusAndUserId(CartStatus status, String userId);
 }

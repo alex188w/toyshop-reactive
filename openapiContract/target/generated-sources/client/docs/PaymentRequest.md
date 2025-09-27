@@ -8,7 +8,7 @@
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
 |**orderId** | **String** |  |  |
-|**amount** | **Double** |  |  |
+|**amount** | **BigDecimal** |  |  |
 |**currency** | **String** |  |  |
 |**method** | **String** | Способ оплаты (например, CARD, PAYPAL, etc.) |  |
 

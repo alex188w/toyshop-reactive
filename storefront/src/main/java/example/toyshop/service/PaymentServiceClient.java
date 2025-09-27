@@ -1,9 +1,5 @@
 package example.toyshop.service;
 
-import com.example.openapi.client.ApiClient;
-import com.example.openapi.client.api.BalanceApi;
-import com.example.openapi.client.api.ConfirmApi;
-import com.example.openapi.client.api.PaymentApi;
 import com.example.openapi.client.model.BalanceResponse;
 import com.example.openapi.client.model.ConfirmRequest;
 import com.example.openapi.client.model.ConfirmResponse;
@@ -14,9 +10,7 @@ import example.toyshop.config.ClientRegistrationLogger;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientManager;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -24,8 +18,14 @@ import reactor.core.publisher.Mono;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reactor.core.publisher.Mono;
-
+/**
+ * Клиент для взаимодействия с платежным сервисом.
+ * <p>
+ * Использует {@link WebClient} для отправки HTTP-запросов и
+ * {@link ReactiveOAuth2AuthorizedClientManager} для получения OAuth2 access
+ * token.
+ * Предоставляет методы для получения баланса, оплаты и подтверждения платежей.
+ */
 @Service
 public class PaymentServiceClient {
 
@@ -39,6 +39,12 @@ public class PaymentServiceClient {
         this.authorizedClientManager = authorizedClientManager;
     }
 
+    /**
+     * Получает access token для авторизации в платежном сервисе.
+     *
+     * @return {@link Mono} с токеном доступа в виде строки.
+     *         Если токен не удалось получить, возвращает {@link Mono#error}.
+     */
     private Mono<String> getAccessToken() {
         OAuth2AuthorizeRequest request = OAuth2AuthorizeRequest
                 .withClientRegistrationId("payment-client")
@@ -55,6 +61,12 @@ public class PaymentServiceClient {
                 });
     }
 
+    /**
+     * Получает текущий баланс пользователя из платежного сервиса.
+     *
+     * @return {@link Mono} с {@link BalanceResponse}, содержащим информацию о
+     *         балансе.
+     */
     public Mono<BalanceResponse> getBalance() {
         return getAccessToken()
                 .flatMap(token -> webClient.get()
@@ -64,6 +76,14 @@ public class PaymentServiceClient {
                         .bodyToMono(BalanceResponse.class));
     }
 
+    /**
+     * Отправляет платежный запрос в платежный сервис.
+     *
+     * @param request запрос на оплату {@link PaymentRequest}, содержащий сумму,
+     *                валюту и метод оплаты.
+     * @return {@link Mono} с {@link PaymentResponse}, содержащим статус платежа и
+     *         ID транзакции.
+     */
     public Mono<PaymentResponse> pay(PaymentRequest request) {
         return getAccessToken()
                 .flatMap(token -> webClient.post()
@@ -74,6 +94,14 @@ public class PaymentServiceClient {
                         .bodyToMono(PaymentResponse.class));
     }
 
+    /**
+     * Подтверждает выполненный платеж в платежном сервисе.
+     *
+     * @param request запрос на подтверждение {@link ConfirmRequest}, содержащий ID
+     *                заказа и ID транзакции.
+     * @return {@link Mono} с {@link ConfirmResponse}, содержащим статус
+     *         подтверждения.
+     */
     public Mono<ConfirmResponse> confirm(ConfirmRequest request) {
         return getAccessToken()
                 .flatMap(token -> webClient.post()
@@ -83,5 +111,4 @@ public class PaymentServiceClient {
                         .retrieve()
                         .bodyToMono(ConfirmResponse.class));
     }
-
 }

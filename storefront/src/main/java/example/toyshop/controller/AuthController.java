@@ -15,9 +15,13 @@ public class AuthController {
     private final UserService userService;
 
     // Страница логина и регистрации (один шаблон auth.html)
-    @GetMapping({"/login", "/auth"})
-    public String authPage(@RequestParam(required = false) String action, Model model) {
+    @GetMapping({ "/login", "/auth" })
+    public String authPage(
+            @RequestParam(required = false) String action,
+            @RequestParam(required = false) String error,
+            Model model) {
         model.addAttribute("action", action != null ? action : "login");
+        model.addAttribute("error", error != null); // true если есть ?error
         return "auth";
     }
 

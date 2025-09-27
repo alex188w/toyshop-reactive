@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.math.BigDecimal;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
@@ -40,7 +41,7 @@ public class PaymentRequest {
 
   public static final String JSON_PROPERTY_AMOUNT = "amount";
   @jakarta.annotation.Nonnull
-  private Double amount;
+  private BigDecimal amount;
 
   public static final String JSON_PROPERTY_CURRENCY = "currency";
   @jakarta.annotation.Nonnull
@@ -78,7 +79,7 @@ public class PaymentRequest {
     this.orderId = orderId;
   }
 
-  public PaymentRequest amount(@jakarta.annotation.Nonnull Double amount) {
+  public PaymentRequest amount(@jakarta.annotation.Nonnull BigDecimal amount) {
     
     this.amount = amount;
     return this;
@@ -92,14 +93,14 @@ public class PaymentRequest {
   @JsonProperty(JSON_PROPERTY_AMOUNT)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
-  public Double getAmount() {
+  public BigDecimal getAmount() {
     return amount;
   }
 
 
   @JsonProperty(JSON_PROPERTY_AMOUNT)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setAmount(@jakarta.annotation.Nonnull Double amount) {
+  public void setAmount(@jakarta.annotation.Nonnull BigDecimal amount) {
     this.amount = amount;
   }
 

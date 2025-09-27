@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.math.BigDecimal;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
@@ -34,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class BalanceResponse {
   public static final String JSON_PROPERTY_BALANCE = "balance";
   @jakarta.annotation.Nonnull
-  private Double balance;
+  private BigDecimal balance;
 
   public static final String JSON_PROPERTY_CURRENCY = "currency";
   @jakarta.annotation.Nonnull
@@ -43,7 +44,7 @@ public class BalanceResponse {
   public BalanceResponse() {
   }
 
-  public BalanceResponse balance(@jakarta.annotation.Nonnull Double balance) {
+  public BalanceResponse balance(@jakarta.annotation.Nonnull BigDecimal balance) {
     
     this.balance = balance;
     return this;
@@ -57,14 +58,14 @@ public class BalanceResponse {
   @JsonProperty(JSON_PROPERTY_BALANCE)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
-  public Double getBalance() {
+  public BigDecimal getBalance() {
     return balance;
   }
 
 
   @JsonProperty(JSON_PROPERTY_BALANCE)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setBalance(@jakarta.annotation.Nonnull Double balance) {
+  public void setBalance(@jakarta.annotation.Nonnull BigDecimal balance) {
     this.balance = balance;
   }
 

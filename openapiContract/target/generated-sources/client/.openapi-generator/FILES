@@ -1,5 +1,6 @@
 .github/workflows/maven.yml
 .gitignore
+.openapi-generator-ignore
 .travis.yml
 README.md
 api/openapi.yaml
@@ -40,3 +41,11 @@ src/main/java/com/example/openapi/client/model/ConfirmRequest.java
 src/main/java/com/example/openapi/client/model/ConfirmResponse.java
 src/main/java/com/example/openapi/client/model/PaymentRequest.java
 src/main/java/com/example/openapi/client/model/PaymentResponse.java
+src/test/java/com/example/openapi/client/api/BalanceApiTest.java
+src/test/java/com/example/openapi/client/api/ConfirmApiTest.java
+src/test/java/com/example/openapi/client/api/PaymentApiTest.java
+src/test/java/com/example/openapi/client/model/BalanceResponseTest.java
+src/test/java/com/example/openapi/client/model/ConfirmRequestTest.java
+src/test/java/com/example/openapi/client/model/ConfirmResponseTest.java
+src/test/java/com/example/openapi/client/model/PaymentRequestTest.java
+src/test/java/com/example/openapi/client/model/PaymentResponseTest.java

@@ -94,7 +94,7 @@
                 <input type="password" name="password" required>
             </label>
             <button type="submit">Войти</button>
-            <p class="message error" th:if="${param.error}">Неверный логин или пароль</p>
+            <p class="message error" th:if="${error}">Неверный логин или пароль</p>
         </form>
 
         <!-- Форма регистрации -->

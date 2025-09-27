@@ -89,7 +89,7 @@ components:
       properties:
         balance:
           type: number
-          format: double
+          format: decimal
           example: 50000.00
         currency:
           type: string
@@ -106,7 +106,7 @@ components:
           example: "12345"
         amount:
           type: number
-          format: double
+          format: decimal
           example: 99.99
         currency:
           type: string

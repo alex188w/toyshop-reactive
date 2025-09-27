@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import java.math.BigDecimal;
 import org.springframework.lang.Nullable;
 import java.time.OffsetDateTime;
 import jakarta.validation.Valid;
@@ -23,7 +24,7 @@ public class PaymentRequest {
 
   private String orderId;
 
-  private Double amount;
+  private BigDecimal amount;
 
   private String currency;
 
@@ -36,7 +37,7 @@ public class PaymentRequest {
   /**
    * Constructor with only required parameters
    */
-  public PaymentRequest(String orderId, Double amount, String currency, String method) {
+  public PaymentRequest(String orderId, BigDecimal amount, String currency, String method) {
     this.orderId = orderId;
     this.amount = amount;
     this.currency = currency;
@@ -63,7 +64,7 @@ public class PaymentRequest {
     this.orderId = orderId;
   }
 
-  public PaymentRequest amount(Double amount) {
+  public PaymentRequest amount(BigDecimal amount) {
     this.amount = amount;
     return this;
   }
@@ -72,14 +73,14 @@ public class PaymentRequest {
    * Get amount
    * @return amount
    */
-  @NotNull 
+  @NotNull @Valid 
   @Schema(name = "amount", example = "99.99", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("amount")
-  public Double getAmount() {
+  public BigDecimal getAmount() {
     return amount;
   }
 
-  public void setAmount(Double amount) {
+  public void setAmount(BigDecimal amount) {
     this.amount = amount;
   }
 

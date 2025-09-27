@@ -8,33 +8,15 @@ import example.toyshop.service.ProductService;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.codec.multipart.FilePart;
-import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
-import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
-import org.springframework.security.core.Authentication;
-
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextImpl;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 /**
  * Контроллер для управления товарами в магазине.
@@ -77,11 +59,6 @@ public class ProductController {
 
         // Определяем ID пользователя
         String userId = oidcUser != null ? oidcUser.getSubject() : "guest";
-
-        // // Проверяем, является ли пользователь админом
-        // boolean isAdmin = oidcUser != null &&
-        // oidcUser.getAuthorities().stream()
-        // .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
         Mono<List<Product>> productsMono = service.getAll()
                 .filter(p -> keyword == null || p.getName().toLowerCase().contains(keyword.toLowerCase()))
@@ -128,7 +105,7 @@ public class ProductController {
      * Форма добавления товара — доступна только администратору.
      */
     @GetMapping("/add")
-    // @PreAuthorize("hasRole('ADMIN')") // проверка роли на уровне метода
+    @PreAuthorize("hasRole('ADMIN')") // проверка роли на уровне метода
     // @PreAuthorize("#user.username == alex.name or hasRole('ADMIN')")
     public Mono<String> addForm() {
         return Mono.just("add-product");

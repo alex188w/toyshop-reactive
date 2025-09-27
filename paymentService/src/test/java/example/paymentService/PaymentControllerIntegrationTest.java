@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.openapi.client.model.BalanceResponse;
 import com.example.openapi.client.model.ConfirmRequest;
@@ -15,10 +16,10 @@ import com.example.openapi.client.model.ConfirmResponse;
 import com.example.openapi.client.model.PaymentRequest;
 import com.example.openapi.client.model.PaymentResponse;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import static org.mockito.Mockito.when;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @AutoConfigureWebTestClient
@@ -37,7 +38,7 @@ class PaymentControllerIntegrationTest {
     void setUp() {
         paymentRequest = new PaymentRequest();
         paymentRequest.setOrderId("order-1");
-        paymentRequest.setAmount(Double.valueOf(500));
+        paymentRequest.setAmount(BigDecimal.valueOf(500));
         paymentRequest.setCurrency("RUB");
         paymentRequest.setMethod("CARD");
 
@@ -98,7 +99,8 @@ class PaymentControllerIntegrationTest {
 
     @Test
     void getBalance_shouldReturnCurrentBalance() {
-        when(balanceService.getBalance()).thenReturn(1234.56);
+        // мокируем сервис, возвращаем BigDecimal
+        when(balanceService.getBalance()).thenReturn(BigDecimal.valueOf(1234.56));
 
         webTestClient.get()
                 .uri("/balance")
@@ -106,7 +108,8 @@ class PaymentControllerIntegrationTest {
                 .expectStatus().isOk()
                 .expectBody(BalanceResponse.class)
                 .value(resp -> {
-                    assertThat(resp.getBalance()).isEqualTo(1234.56);
+                    // сравниваем BigDecimal корректно
+                    assertThat(resp.getBalance().doubleValue()).isEqualTo(1234.56);
                     assertThat(resp.getCurrency()).isEqualTo("RUB");
                 });
     }

@@ -59,7 +59,7 @@ class CartControllerIntegrationTest extends IntegrationTestcontainers {
                                 .thenReturn(Mono.just(new CartView()));
 
                 Mockito.when(paymentServiceClient.getBalance())
-                                .thenReturn(Mono.just(new BalanceResponse().balance(0.0)));
+                                .thenReturn(Mono.just(new BalanceResponse().balance(BigDecimal.valueOf(0.0))));
 
                 webTestClient.get()
                                 .uri("/cart")
@@ -90,7 +90,7 @@ class CartControllerIntegrationTest extends IntegrationTestcontainers {
                                 .thenReturn(Mono.just(paymentResponse));
 
                 Mockito.when(paymentServiceClient.getBalance())
-                                .thenReturn(Mono.just(new BalanceResponse().balance(100.0)));
+                                .thenReturn(Mono.just(new BalanceResponse().balance(BigDecimal.valueOf(0.0))));
 
                 webTestClient.post()
                                 .uri("/cart/confirm-payment")
@@ -126,7 +126,7 @@ class CartControllerIntegrationTest extends IntegrationTestcontainers {
                                 .thenReturn(Mono.just(confirmResponse));
 
                 Mockito.when(paymentServiceClient.getBalance())
-                                .thenReturn(Mono.just(new BalanceResponse().balance(2000.0)));
+                                .thenReturn(Mono.just(new BalanceResponse().balance(BigDecimal.valueOf(0.0))));
 
                 webTestClient.post()
                                 .uri("/cart/confirm-payment")
@@ -142,7 +142,7 @@ class CartControllerIntegrationTest extends IntegrationTestcontainers {
                                 .thenReturn(Mono.just(new CartView()));
 
                 Mockito.when(paymentServiceClient.getBalance())
-                                .thenReturn(Mono.just(new BalanceResponse().balance(0.0)));
+                                .thenReturn(Mono.just(new BalanceResponse().balance(BigDecimal.valueOf(0.0))));
 
                 webTestClient.get()
                                 .uri("/cart")
@@ -175,7 +175,8 @@ class CartControllerIntegrationTest extends IntegrationTestcontainers {
                                 .thenReturn(Mono.just(new CartView(List.of(), BigDecimal.valueOf(1000))));
 
                 Mockito.when(paymentServiceClient.getBalance())
-                                .thenReturn(Mono.just(new BalanceResponse().balance(mockedBalance)));
+                                .thenReturn(Mono.just(
+                                                new BalanceResponse().balance(BigDecimal.valueOf(mockedBalance))));
 
                 webTestClient.get()
                                 .uri("/cart/prepare-payment")

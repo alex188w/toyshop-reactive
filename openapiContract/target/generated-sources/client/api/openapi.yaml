@@ -89,7 +89,7 @@ components:
       properties:
         balance:
           example: 50000.0
-          format: double
+          format: decimal
           type: number
         currency:
           example: RUB
@@ -110,7 +110,7 @@ components:
           type: string
         amount:
           example: 99.99
-          format: double
+          format: decimal
           type: number
         currency:
           example: RUB

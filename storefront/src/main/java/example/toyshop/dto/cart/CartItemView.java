@@ -44,8 +44,8 @@ public class CartItemView {
         this.productId = product.getId();
         this.name = product.getName();
         this.imageUrl = product.getImageUrl();
+        this.price = product.getPrice() != null ? BigDecimal.valueOf(product.getPrice()) : BigDecimal.ZERO;
         this.quantity = item.getQuantity() != null ? item.getQuantity() : 0;
-        this.price = BigDecimal.valueOf(product.getPrice());
         this.totalPrice = this.price.multiply(BigDecimal.valueOf(this.quantity));
     }
 }

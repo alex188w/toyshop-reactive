@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import java.math.BigDecimal;
 import org.springframework.lang.Nullable;
 import java.time.OffsetDateTime;
 import jakarta.validation.Valid;
@@ -21,7 +22,7 @@ import jakarta.annotation.Generated;
 @Generated(value = "org.openapitools.codegen.languages.SpringCodegen", comments = "Generator version: 7.12.0")
 public class BalanceResponse {
 
-  private Double balance;
+  private BigDecimal balance;
 
   private String currency;
 
@@ -32,12 +33,12 @@ public class BalanceResponse {
   /**
    * Constructor with only required parameters
    */
-  public BalanceResponse(Double balance, String currency) {
+  public BalanceResponse(BigDecimal balance, String currency) {
     this.balance = balance;
     this.currency = currency;
   }
 
-  public BalanceResponse balance(Double balance) {
+  public BalanceResponse balance(BigDecimal balance) {
     this.balance = balance;
     return this;
   }
@@ -46,14 +47,14 @@ public class BalanceResponse {
    * Get balance
    * @return balance
    */
-  @NotNull 
+  @NotNull @Valid 
   @Schema(name = "balance", example = "50000.0", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("balance")
-  public Double getBalance() {
+  public BigDecimal getBalance() {
     return balance;
   }
 
-  public void setBalance(Double balance) {
+  public void setBalance(BigDecimal balance) {
     this.balance = balance;
   }
 

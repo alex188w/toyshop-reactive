@@ -7,7 +7,7 @@
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**balance** | **Double** |  |  |
+|**balance** | **BigDecimal** |  |  |
 |**currency** | **String** |  |  |
 
 
