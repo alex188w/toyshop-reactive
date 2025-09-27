@@ -44,6 +44,12 @@
             font-size: 14px;
         }
 
+        .greeting {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+
         .navigation {
             width: 100%;
             display: flex;
@@ -65,17 +71,21 @@
 </head>
 
 <body class="bg-light">
-    <nav>
-        <div id="user-info"></div>
-        <a href="/oauth2/authorization/keycloak">Войти</a>
-        <a href="/logout">Выйти</a>
-    </nav>
-
     <div class="container mt-5">
+        <div class="greeting">
+            <div id="user-info"></div>
+            <div class="order">
+                <a href="/login" id="login-link">Войти</a>
+                <a href="/auth" id="signup-link">Зарегистрироваться</a>
+                <a href="/logout" id="logout-link">Выйти</a>
+            </div>
+        </div>
+
         <h1 class="mb-4" style="text-align: center;">Витрина товаров</h1>
         <div class="navigation">
 
-            <form action="/products/add" method="get">
+            <!-- Показываем только для админа -->
+            <form style="display: none;" id="add-product-form" action="/products/add" method="get">
                 <button class="button-add" type="submit">Добавить товар на витрину магазина</button>
             </form>
             <div class="order">
@@ -149,7 +159,7 @@
                     </td>
                     <td>
                         <form class="cart-form" method="post" th:action="@{/cart/add/{id}(id=${p.id})}">
-                            <button type="submit" th:disabled="${p.quantity == 0}">
+                            <button type="submit" class="add-to-cart-btn">
                                 Добавить
                             </button>
                         </form>
@@ -161,13 +171,45 @@
     </div>
 
 </body>
+
 <script>
-    fetch("/me")
-        .then(r => r.json())
-        .then(user => {
-            document.getElementById("user-info").innerText =
-                "Привет, " + user.username;
-        });
+    async function updateUserInfo() {
+        try {
+            const res = await fetch('/api/auth-info', { credentials: 'include' });
+            if (!res.ok) throw new Error('Ошибка запроса');
+            const data = await res.json();
+
+            const userInfoDiv = document.getElementById('user-info');
+            const loginLink = document.getElementById('login-link');
+            const signupLink = document.getElementById('signup-link');
+            const logoutLink = document.getElementById('logout-link');
+            const buttons = document.querySelectorAll('.add-to-cart-btn');
+
+            if (data.username && data.username !== 'Гость') {
+                // ✅ авторизован
+                userInfoDiv.textContent = 'Привет, ' + data.username;
+                loginLink.style.display = 'none';
+                signupLink.style.display = 'none';
+                logoutLink.style.display = 'inline';
+
+                // включаем все кнопки для авторизованного
+                buttons.forEach(btn => btn.disabled = false);
+            } else {
+                // ❌ не авторизован
+                userInfoDiv.textContent = 'Привет, Гость';
+                loginLink.style.display = 'inline';
+                signupLink.style.display = 'inline';
+                logoutLink.style.display = 'none';
+
+                // делаем все кнопки неактивными
+                buttons.forEach(btn => btn.disabled = true);
+            }
+        } catch (err) {
+            console.error('Ошибка при получении информации о пользователе:', err);
+        }
+    }
+
+    updateUserInfo();
 </script>
 
 </html>

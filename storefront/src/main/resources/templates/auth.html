@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Авторизация</title>
+    <style>
+        body {
+            background-color: #007bff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            width: 380px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        form label {
+            display: block;
+            margin-bottom: 10px;
+            text-align: left;
+            color: #555;
+        }
+
+        form input {
+            width: 100%;
+            padding: 8px 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .message {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .toggle-link {
+            margin-top: 15px;
+            display: block;
+            color: #007bff;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 id="formTitle">Вход</h1>
+        <h2 style="padding-bottom: 20px;">Магазин "Витрина товаров"</h2>
+
+        <!-- Форма входа -->
+        <form id="loginForm" method="post" th:action="@{/login}">
+            <label>Логин:
+                <input type="text" name="username" required>
+            </label>
+            <label>Пароль:
+                <input type="password" name="password" required>
+            </label>
+            <button type="submit">Войти</button>
+            <p class="message error" th:if="${param.error}">Неверный логин или пароль</p>
+        </form>
+
+        <!-- Форма регистрации -->
+        <form id="signupForm" style="display:none;">
+            <label>Логин:
+                <input type="text" name="username" required>
+            </label>
+            <label>Email:
+                <input type="email" name="email" required>
+            </label>
+            <label>Пароль:
+                <input type="password" name="password" required>
+            </label>
+            <button type="submit">Зарегистрироваться</button>
+            <p id="signupMessage" class="message"></p>
+        </form>
+
+        <span id="toggleLink" class="toggle-link">Нет аккаунта? Зарегистрироваться</span>
+    </div>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const toggleLink = document.getElementById('toggleLink');
+        const formTitle = document.getElementById('formTitle');
+        const signupMessage = document.getElementById('signupMessage');
+
+        toggleLink.addEventListener('click', () => {
+            if (loginForm.style.display === 'none') {
+                signupForm.style.display = 'none';
+                loginForm.style.display = 'block';
+                formTitle.textContent = 'Вход';
+                toggleLink.textContent = 'Нет аккаунта? Зарегистрироваться';
+            } else {
+                loginForm.style.display = 'none';
+                signupForm.style.display = 'block';
+                formTitle.textContent = 'Регистрация';
+                toggleLink.textContent = 'Уже есть аккаунт? Войти';
+            }
+        });
+
+        signupForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(signupForm);
+            const data = {
+                username: formData.get('username'),
+                email: formData.get('email'),
+                password: formData.get('password')
+            };
+
+            try {
+                const response = await fetch('/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const text = await response.text();
+
+                if (response.ok) {
+                    signupMessage.textContent = text;
+                    signupMessage.className = 'message success';
+                    signupForm.reset();
+                } else {
+                    signupMessage.textContent = text;
+                    signupMessage.className = 'message error';
+                }
+
+            } catch (err) {
+                signupMessage.textContent = 'Ошибка: ' + err.message;
+                signupMessage.className = 'message error';
+            }
+        });
+    </script>
+</body>
+
+</html>

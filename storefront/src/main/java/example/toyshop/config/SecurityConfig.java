@@ -1,59 +1,90 @@
 package example.toyshop.config;
 
+import java.net.URI;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.oauth2.client.oidc.web.server.logout.OidcClientInitiatedServerLogoutSuccessHandler;
-import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
+import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.server.authentication.RedirectServerAuthenticationSuccessHandler;
-import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler;
+import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
+import org.springframework.http.HttpMethod;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
+
+import reactor.core.publisher.Mono;
+
+import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
 
 @Configuration
 @EnableWebFluxSecurity
-// Активация поддержки аннотаций для методов
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
 
         @Bean
-        public SecurityWebFilterChain springSecurityFilterChain(
-                        ServerHttpSecurity http,
-                        ReactiveClientRegistrationRepository clientRegistrationRepository) {
-
+        public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
                 return http
-                                .csrf(ServerHttpSecurity.CsrfSpec::disable) // отключаем для WebFlux + OAuth2
+                                .csrf(ServerHttpSecurity.CsrfSpec::disable) // у тебя уже отключён CSRF
+                                .securityContextRepository(new WebSessionServerSecurityContextRepository())
                                 .authorizeExchange(exchanges -> exchanges
-                                                // публичные страницы
-                                                .pathMatchers("/", "/login", "/products", "/css/**", "/js/**",
-                                                                "/uploads/**", "/me")
+                                                .pathMatchers("/", "/products", "/login", "/api/auth-info", "/signup", "/auth", "/css/**",
+                                                                "/js/**", "/images/**")
                                                 .permitAll()
-                                                // доступ только админу
-                                                .pathMatchers("/admin/**").hasRole("admin")
-                                                // доступ только авторизованному пользователю
                                                 .pathMatchers("/cart/**", "/orders/**", "/checkout/**").authenticated()
-                                                // остальное — по умолчанию авторизация
                                                 .anyExchange().authenticated())
-                                .oauth2Login(oauth2 -> oauth2
-                                                .authenticationSuccessHandler(
-                                                                new RedirectServerAuthenticationSuccessHandler(
-                                                                                "/products")))
-                                .logout(logout -> logout.logoutSuccessHandler(
-                                                oidcLogoutSuccessHandler(clientRegistrationRepository)))
+                                .formLogin(form -> form
+                                                .loginPage("/login")
+                                                .authenticationSuccessHandler((webFilterExchange, authentication) -> {
+                                                        System.out.println("Успешная авторизация: "
+                                                                        + authentication.getName());
+                                                        webFilterExchange.getExchange().getResponse()
+                                                                        .setStatusCode(HttpStatus.SEE_OTHER);
+                                                        webFilterExchange.getExchange().getResponse().getHeaders()
+                                                                        .setLocation(URI.create("/products"));
+                                                        return webFilterExchange.getExchange().getResponse()
+                                                                        .setComplete();
+                                                }))
+                                .logout(logout -> logout
+                                                .logoutUrl("/logout")
+                                                .requiresLogout(ServerWebExchangeMatchers.pathMatchers(HttpMethod.GET,
+                                                                "/logout"))
+                                                .logoutSuccessHandler((webFilterExchange, authentication) -> {
+                                                        return webFilterExchange.getExchange().getSession()
+                                                                        .flatMap(webSession -> webSession.invalidate())
+                                                                        .then(Mono.fromRunnable(() -> {
+                                                                                webFilterExchange.getExchange()
+                                                                                                .getResponse()
+                                                                                                .setStatusCode(HttpStatus.SEE_OTHER);
+                                                                                webFilterExchange.getExchange()
+                                                                                                .getResponse()
+                                                                                                .getHeaders()
+                                                                                                .setLocation(URI.create(
+                                                                                                                "/products"));
+                                                                        }))
+                                                                        .then(webFilterExchange.getExchange()
+                                                                                        .getResponse().setComplete());
+                                                }))
                                 .build();
         }
 
         @Bean
-        public ServerLogoutSuccessHandler oidcLogoutSuccessHandler(
-                        ReactiveClientRegistrationRepository clientRegistrationRepository) {
-
-                OidcClientInitiatedServerLogoutSuccessHandler logoutSuccessHandler = new OidcClientInitiatedServerLogoutSuccessHandler(
-                                clientRegistrationRepository);
-
-                // Указываем куда редиректить после logout (гость)
-                logoutSuccessHandler.setPostLogoutRedirectUri("{baseUrl}/products");
-
-                return logoutSuccessHandler;
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
         }
 }

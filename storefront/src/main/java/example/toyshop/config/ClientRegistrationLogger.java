@@ -22,7 +22,5 @@ public class ClientRegistrationLogger {
             .doOnNext(r -> log.info("Found client: {}", r.getClientId()))
             .switchIfEmpty(Mono.fromRunnable(() -> log.warn("payment-client not found")))
             .subscribe();
-    }
-
-    
+    }    
 }

@@ -8,17 +8,33 @@ import example.toyshop.service.ProductService;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
+import org.springframework.security.core.Authentication;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextImpl;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 /**
  * Контроллер для управления товарами в магазине.
@@ -59,7 +75,13 @@ public class ProductController {
             @RequestParam(name = "size", defaultValue = "10") int size,
             Model model) {
 
+        // Определяем ID пользователя
         String userId = oidcUser != null ? oidcUser.getSubject() : "guest";
+
+        // // Проверяем, является ли пользователь админом
+        // boolean isAdmin = oidcUser != null &&
+        // oidcUser.getAuthorities().stream()
+        // .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
         Mono<List<Product>> productsMono = service.getAll()
                 .filter(p -> keyword == null || p.getName().toLowerCase().contains(keyword.toLowerCase()))
@@ -95,50 +117,52 @@ public class ProductController {
                     model.addAttribute("keyword", keyword);
                     model.addAttribute("sort", sort);
                     model.addAttribute("size", size);
+                    // Передаём флаг в модель
+                    // model.addAttribute("isAdmin", isAdmin);
 
                     return "products";
                 });
     }
 
     /**
-     * Отображает HTML-форму для добавления нового товара.
-     *
-     * @return имя HTML-шаблона {@code add-product}
+     * Форма добавления товара — доступна только администратору.
      */
     @GetMapping("/add")
-    public String addForm() {
-        return "add-product";
+    // @PreAuthorize("hasRole('ADMIN')") // проверка роли на уровне метода
+    // @PreAuthorize("#user.username == alex.name or hasRole('ADMIN')")
+    public Mono<String> addForm() {
+        return Mono.just("add-product");
     }
 
     /**
-     * Обрабатывает отправку формы добавления товара.
-     * Если прикреплено изображение — сохраняет его, иначе задаёт пустую строку в
-     * imageUrl.
+     * Обработка отправки формы добавления товара.
+     * Доступна только администратору.
      *
      * @param form форма с данными товара (название, описание, цена, количество,
      *             изображение)
      * @return перенаправление на страницу списка товаров
      */
+
     @PostMapping("/add")
     public Mono<String> addProduct(@ModelAttribute ProductForm form) {
-        FilePart file = form.getFile();
-        Mono<String> imageMono;
-
-        if (file != null) {
-            imageMono = service.saveImage(file);
-        } else {
-            imageMono = Mono.just("");
-        }
-
-        return imageMono.flatMap(url -> {
-            Product product = new Product();
-            product.setName(form.getName());
-            product.setDescription(form.getDescription());
-            product.setPrice(form.getPrice());
-            product.setQuantity(form.getQuantity());
-            product.setImageUrl(url);
-            return service.save(product);
-        }).thenReturn("redirect:/products");
+        return ReactiveSecurityContextHolder.getContext()
+                .map(ctx -> {
+                    System.out.println("Auth for POST /add: " + ctx.getAuthentication());
+                    return ctx.getAuthentication();
+                })
+                .then(Mono.defer(() -> {
+                    FilePart file = form.getFile();
+                    Mono<String> imageMono = file != null ? service.saveImage(file) : Mono.just("");
+                    return imageMono.flatMap(url -> {
+                        Product product = new Product();
+                        product.setName(form.getName());
+                        product.setDescription(form.getDescription());
+                        product.setPrice(form.getPrice());
+                        product.setQuantity(form.getQuantity());
+                        product.setImageUrl(url);
+                        return service.save(product);
+                    }).thenReturn("redirect:/products");
+                }));
     }
 
     /**
