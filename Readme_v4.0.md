@@ -115,11 +115,11 @@ Keycloak и Redis должны быть запущены локально на �
 
 Регистрация/логин
 
-![Регистрация/логин](img/login.jpg)
+![Регистрация/логин](img/login1.jpg)
 
 Добавление товара на страницу (доступно только пользователь с ROLE_ADMIN)
 
-![Добавление товара](img/admin.jpg)
+![Добавление товара](img/admin1.jpg)
 
 Заказ
 
@@ -127,17 +127,17 @@ Keycloak и Redis должны быть запущены локально на �
 
 Вход гостем
 
-![Гость](img/quest.jpg)
+![Гость](img/quest1.jpg)
 
 
 Тестирование
 
-![test](img/paymentServiceTest.jpg)
+![test](img/paymentServiceTest1.jpg)
 
 
-![test](img/paymentServiceClient.jpg)
+![test](img/paymentServiceClient1.jpg)
 
-![test](img/storeFrontTest2.jpg)
+![test](img/storeFrontTest3.jpg)
 
 
 

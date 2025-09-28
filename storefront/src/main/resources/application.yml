@@ -1,0 +1,67 @@
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/toyshop
+      client:
+        registration:
+          keycloak:
+            client-id: storefront
+            client-secret: yvwKiveaN9tAXbpBmqNZa4155A2KHAXM
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope: openid, profile, email
+
+          payment-client:
+            client-id: payment-service
+            client-secret: 0LeX2O3gxd01NpazdEiLYLJEBonXy7hZ
+            authorization-grant-type: client_credentials
+            scope: payments.read,payments.write
+            provider: keycloak
+
+          user-admin-client:
+            client-id: user-admin-client
+            client-secret: y8x5ycBkwCosAC41kwR2opqBubPrZKho
+            authorization-grant-type: client_credentials
+            scope: manage-users,view-users
+            provider: keycloak
+
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8080/realms/toyshop
+            token-uri: http://localhost:8080/realms/toyshop/protocol/openid-connect/token
+
+  webflux:
+    static-path-pattern: "/uploads/**"
+
+  application:
+    name: toyshop
+
+  sql:
+    init:
+      mode: never
+
+  data:
+    r2dbc:
+      repositories:
+        enabled: true
+    redis:
+      database: 0
+
+server:
+  port: 8085
+
+keycloak:
+  admin-url: http://localhost:8080
+  admin-client-id: user-admin-client
+  admin-client-secret: y8x5ycBkwCosAC41kwR2opqBubPrZKho
+
+# logging:
+#   level:
+#     org.springframework.security: DEBUG
+#     org.springframework.security.oauth2: DEBUG
+#     org.springframework.web: INFO
+
+
+
