@@ -1,11 +1,15 @@
 package example.paymentService;
 
+import example.paymentService.config.TestSecurityConfig;
 import example.paymentService.service.BalanceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,14 +25,16 @@ import java.util.UUID;
 
 import static org.mockito.Mockito.when;
 
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
+@ActiveProfiles("test") // отдельный профиль
+@Import(TestSecurityConfig.class)  // подключаем конфиг
 class PaymentControllerIntegrationTest {
 
     @Autowired
     private WebTestClient webTestClient;
 
-    @MockitoBean
+    @MockBean
     private BalanceService balanceService;
 
     private PaymentRequest paymentRequest;
@@ -99,7 +105,6 @@ class PaymentControllerIntegrationTest {
 
     @Test
     void getBalance_shouldReturnCurrentBalance() {
-        // мокируем сервис, возвращаем BigDecimal
         when(balanceService.getBalance()).thenReturn(BigDecimal.valueOf(1234.56));
 
         webTestClient.get()
@@ -108,8 +113,7 @@ class PaymentControllerIntegrationTest {
                 .expectStatus().isOk()
                 .expectBody(BalanceResponse.class)
                 .value(resp -> {
-                    // сравниваем BigDecimal корректно
-                    assertThat(resp.getBalance().doubleValue()).isEqualTo(1234.56);
+                    assertThat(resp.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(1234.56));
                     assertThat(resp.getCurrency()).isEqualTo("RUB");
                 });
     }

@@ -10,6 +10,8 @@ import example.toyshop.repository.CartItemRepository;
 import example.toyshop.repository.CartRepository;
 import example.toyshop.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
@@ -28,6 +30,7 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class CartService {
 
     private final CartRepository cartRepository;

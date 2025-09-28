@@ -12,11 +12,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.time.Duration;
-
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class ProductServiceTest {
@@ -62,26 +57,30 @@ class ProductServiceTest {
 
     // @Test
     // void getAll_shouldFetchFromDb_andCache_ifCacheEmpty() {
-    //     // пустой кэш
-    //     when(listOps.size("product:all")).thenReturn(Mono.just(0L));
-    //     when(productRepository.findAll()).thenReturn(Flux.just(product1, product2));
+    // // пустой кэш
+    // when(listOps.size("product:all")).thenReturn(Mono.just(0L));
+    // when(productRepository.findAll()).thenReturn(Flux.just(product1, product2));
 
-    //     // Мокируем rightPushAll правильно
-    //     when(listOps.rightPushAll(eq("product:all"), ArgumentMatchers.<Object[]>any()))
-    //             .thenAnswer(invocation -> {
-    //                 Object[] products = invocation.getArgument(1, Object[].class);
-    //                 return Mono.just((long) products.length); // возвращаем Mono<Long>, как реально делает Redis
-    //             });
+    // // Мокируем rightPushAll правильно
+    // when(listOps.rightPushAll(eq("product:all"),
+    // ArgumentMatchers.<Object[]>any()))
+    // .thenAnswer(invocation -> {
+    // Object[] products = invocation.getArgument(1, Object[].class);
+    // return Mono.just((long) products.length); // возвращаем Mono<Long>, как
+    // реально делает Redis
+    // });
 
-    //     when(redisTemplate.expire("product:all", Duration.ofMinutes(5))).thenReturn(Mono.just(true));
+    // when(redisTemplate.expire("product:all",
+    // Duration.ofMinutes(5))).thenReturn(Mono.just(true));
 
-    //     StepVerifier.create(productService.getAll())
-    //             .expectNext(product1, product2)
-    //             .verifyComplete();
+    // StepVerifier.create(productService.getAll())
+    // .expectNext(product1, product2)
+    // .verifyComplete();
 
-    //     verify(productRepository).findAll();
-    //     verify(listOps).rightPushAll(eq("product:all"), ArgumentMatchers.<Object[]>any());
-    //     verify(redisTemplate).expire("product:all", Duration.ofMinutes(5));
+    // verify(productRepository).findAll();
+    // verify(listOps).rightPushAll(eq("product:all"),
+    // ArgumentMatchers.<Object[]>any());
+    // verify(redisTemplate).expire("product:all", Duration.ofMinutes(5));
     // }
 
     /**

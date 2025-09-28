@@ -36,3 +36,5 @@ logging:
     org.springframework.security: DEBUG
     org.springframework.web.reactive.function.client: DEBUG
     example.paymentService: DEBUG   # свои пакеты тоже можно включить
+
+

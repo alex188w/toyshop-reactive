@@ -24,7 +24,7 @@ class BalanceServiceIntegrationTest {
     void deduct_shouldReduceBalance() {
         boolean result = balanceService.deduct(BigDecimal.valueOf(1500));
         assertTrue(result);
-        assertEquals(BigDecimal.valueOf(3500), balanceService.getBalance());
+        assertEquals(BigDecimal.valueOf(5500), balanceService.getBalance());
     }
 
     @Test

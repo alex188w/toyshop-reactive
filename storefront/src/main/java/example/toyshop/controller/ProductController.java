@@ -121,6 +121,7 @@ public class ProductController {
      */
 
     @PostMapping("/add")
+    @PreAuthorize("hasRole('ADMIN')")
     public Mono<String> addProduct(@ModelAttribute ProductForm form) {
         return ReactiveSecurityContextHolder.getContext()
                 .map(ctx -> {

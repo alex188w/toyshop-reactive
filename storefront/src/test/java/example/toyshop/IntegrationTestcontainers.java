@@ -40,7 +40,7 @@ public abstract class IntegrationTestcontainers {
         databaseClient.sql("""
                     CREATE TABLE IF NOT EXISTS cart (
                         id BIGSERIAL PRIMARY KEY,
-                        session_id VARCHAR(255),
+                        user_id VARCHAR NOT NULL,
                         status VARCHAR(20),
                         created_at TIMESTAMP DEFAULT now()
                     )

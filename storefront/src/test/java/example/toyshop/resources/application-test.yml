@@ -17,6 +17,9 @@ payment:
     url: http://localhost:8081
 
 spring:
+  security:
+    enabled: false
+    
   data:
     redis:
       host: 127.0.0.1

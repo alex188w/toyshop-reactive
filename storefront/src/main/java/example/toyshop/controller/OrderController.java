@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -32,6 +33,7 @@ import org.springframework.ui.Model;
 @Controller
 @RequestMapping("/orders")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class OrderController {
 
     private final CartRepository cartRepository;

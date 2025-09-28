@@ -1,35 +1,33 @@
 package example.toyshop.controller;
 
-import example.toyshop.IntegrationTestcontainers;
+import example.toyshop.config.TestSecurityConfig;
 import example.toyshop.dto.cart.CartView;
-import example.toyshop.model.Cart;
-import example.toyshop.model.Product;
+import example.toyshop.model.User;
+import example.toyshop.service.CartPaymentService;
 import example.toyshop.service.CartService;
-import example.toyshop.service.PaymentServiceClient;
+import example.toyshop.service.UserService;
 import reactor.core.publisher.Mono;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.security.authentication.TestingAuthenticationToken;
 
-import com.example.openapi.client.model.BalanceResponse;
-import com.example.openapi.client.model.ConfirmResponse;
-import com.example.openapi.client.model.PaymentResponse;
-
-import static org.assertj.core.api.Assertions.assertThat;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
-@SpringBootTest
-@ActiveProfiles("test")
-@AutoConfigureWebTestClient
-class CartControllerIntegrationTest extends IntegrationTestcontainers {
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockAuthentication;
+
+@WebFluxTest(controllers = CartController.class)
+@Import(TestSecurityConfig.class) 
+class CartControllerIntegrationTest {
 
         @Autowired
         private WebTestClient webTestClient;
@@ -38,115 +36,38 @@ class CartControllerIntegrationTest extends IntegrationTestcontainers {
         private CartService cartService;
 
         @MockitoBean
-        private PaymentServiceClient paymentServiceClient;
+        private CartPaymentService cartPaymentService;
 
-        private final String sessionId = "test-session";
-        private Product testProduct;
+        @MockitoBean
+        private UserService userService;
+
+        private final String testUserId = "1";
 
         @BeforeEach
-        void setUp() {
-                testProduct = new Product();
-                testProduct.setId(1L);
-                testProduct.setName("Игрушечный робот");
-                testProduct.setDescription("Робот с батарейками");
-                testProduct.setPrice(1500);
-                testProduct.setQuantity(10);
-        }
+        void setUpUser() {
+                // Мокируем пользователя с ролями
+                User testUser = new User();
+                testUser.setId(1L);
+                testUser.setUsername("test");
 
-        @Test
-        void viewCart_shouldReturnEmptyCart() {
-                Mockito.when(cartService.getCartView(Mockito.anyString()))
-                                .thenReturn(Mono.just(new CartView()));
+                UserService.UserWithRoles userWithRoles = new UserService.UserWithRoles(testUser, List.of());
 
-                Mockito.when(paymentServiceClient.getBalance())
-                                .thenReturn(Mono.just(new BalanceResponse().balance(BigDecimal.valueOf(0.0))));
+                Mockito.when(userService.findByUsernameWithRoles(Mockito.anyString()))
+                                .thenReturn(Mono.just(userWithRoles));
 
-                webTestClient.get()
-                                .uri("/cart")
-                                .cookie("CART_SESSION", sessionId)
-                                .exchange()
-                                .expectStatus().isOk()
-                                .expectBody(String.class)
-                                .consumeWith(body -> assertThat(body.getResponseBody()).contains("cart"));
-        }
-
-        @Test
-        void confirmPayment_shouldReturnCartWithError_whenPaymentFails() {
-                CartView cartView = new CartView();
-                cartView.setTotalAmount(BigDecimal.valueOf(1500));
-
-                Mockito.when(cartService.getCartView(Mockito.anyString()))
-                                .thenReturn(Mono.just(cartView));
-
-                Cart cart = new Cart();
-                cart.setId(123L);
-                Mockito.when(cartService.checkout(Mockito.anyString()))
-                                .thenReturn(Mono.just(cart));
-
-                PaymentResponse paymentResponse = new PaymentResponse();
-                paymentResponse.setStatus(PaymentResponse.StatusEnum.FAILED);
-                paymentResponse.setMessage("Недостаточно средств");
-                Mockito.when(paymentServiceClient.pay(Mockito.any()))
-                                .thenReturn(Mono.just(paymentResponse));
-
-                Mockito.when(paymentServiceClient.getBalance())
-                                .thenReturn(Mono.just(new BalanceResponse().balance(BigDecimal.valueOf(0.0))));
-
-                webTestClient.post()
-                                .uri("/cart/confirm-payment")
-                                .cookie("CART_SESSION", sessionId)
-                                .exchange()
-                                .expectStatus().isOk()
-                                .expectBody(String.class)
-                                .consumeWith(body -> assertThat(body.getResponseBody()).contains("cart"));
-        }
-
-        @Test
-        void confirmPayment_shouldRedirectToOrder_whenPaymentSucceeds() {
-                Cart cart = new Cart();
-                cart.setId(1L);
-
-                CartView cartView = new CartView();
-                cartView.setTotalAmount(BigDecimal.valueOf(1500));
-
-                Mockito.when(cartService.getCartView(Mockito.anyString()))
-                                .thenReturn(Mono.just(cartView));
-                Mockito.when(cartService.checkout(Mockito.anyString()))
-                                .thenReturn(Mono.just(cart));
-
-                PaymentResponse paymentResponse = new PaymentResponse();
-                paymentResponse.setStatus(PaymentResponse.StatusEnum.SUCCESS);
-                paymentResponse.setTransactionId("txn-123");
-                Mockito.when(paymentServiceClient.pay(Mockito.any()))
-                                .thenReturn(Mono.just(paymentResponse));
-
-                ConfirmResponse confirmResponse = new ConfirmResponse();
-                confirmResponse.setConfirmed(true);
-                Mockito.when(paymentServiceClient.confirm(Mockito.any()))
-                                .thenReturn(Mono.just(confirmResponse));
-
-                Mockito.when(paymentServiceClient.getBalance())
-                                .thenReturn(Mono.just(new BalanceResponse().balance(BigDecimal.valueOf(0.0))));
-
-                webTestClient.post()
-                                .uri("/cart/confirm-payment")
-                                .cookie("CART_SESSION", sessionId)
-                                .exchange()
-                                .expectStatus().is3xxRedirection()
-                                .expectHeader().valueMatches("Location", "/orders/1");
+                // Подключаем авторизацию ко всем запросам
+                webTestClient = webTestClient.mutateWith(
+                                mockAuthentication(new TestingAuthenticationToken("test", "password", "ROLE_USER")));
         }
 
         @Test
         void viewCart_shouldReturnCartPage() {
-                Mockito.when(cartService.getCartView(Mockito.anyString()))
-                                .thenReturn(Mono.just(new CartView()));
-
-                Mockito.when(paymentServiceClient.getBalance())
-                                .thenReturn(Mono.just(new BalanceResponse().balance(BigDecimal.valueOf(0.0))));
+                Mockito.when(cartPaymentService.prepareCartForView(Mockito.anyString()))
+                                .thenReturn(Mono.just(
+                                                Map.of("cart", new CartView(), "currentBalance", BigDecimal.ZERO)));
 
                 webTestClient.get()
                                 .uri("/cart")
-                                .cookie("CART_SESSION", sessionId)
                                 .exchange()
                                 .expectStatus().isOk()
                                 .expectBody(String.class)
@@ -155,44 +76,104 @@ class CartControllerIntegrationTest extends IntegrationTestcontainers {
 
         @Test
         void addProduct_shouldRedirectToProducts() {
-                // Важно: замокать cartService, иначе будет 500
                 Mockito.when(cartService.addProduct(Mockito.anyString(), Mockito.anyLong()))
                                 .thenReturn(Mono.empty());
 
                 webTestClient.post()
-                                .uri("/cart/add/{id}", 1)
-                                .cookie("CART_SESSION", sessionId)
+                                .uri("/cart/add/{productId}", 1)
                                 .exchange()
                                 .expectStatus().is3xxRedirection()
-                                .expectHeader().value("Location", loc -> assertThat(loc).isEqualTo("/products"));
+                                .expectHeader().valueEquals("Location", "/products");
+        }
+
+        @Test
+        void increaseProduct_shouldRedirectToCart() {
+                Mockito.when(cartService.increaseProduct(Mockito.anyString(), Mockito.anyLong()))
+                                .thenReturn(Mono.empty());
+
+                webTestClient.post()
+                                .uri("/cart/increase/{productId}", 1)
+                                .exchange()
+                                .expectStatus().is3xxRedirection()
+                                .expectHeader().valueEquals("Location", "/cart");
+        }
+
+        @Test
+        void decreaseProduct_shouldRedirectToCart() {
+                Mockito.when(cartService.decreaseProduct(Mockito.anyString(), Mockito.anyLong()))
+                                .thenReturn(Mono.empty());
+
+                webTestClient.post()
+                                .uri("/cart/decrease/{productId}", 1)
+                                .exchange()
+                                .expectStatus().is3xxRedirection()
+                                .expectHeader().valueEquals("Location", "/cart");
+        }
+
+        @Test
+        void removeProduct_shouldRedirectToCart() {
+                Mockito.when(cartService.removeProduct(Mockito.anyString(), Mockito.anyLong()))
+                                .thenReturn(Mono.empty());
+
+                webTestClient.post()
+                                .uri("/cart/remove/{productId}", 1)
+                                .exchange()
+                                .expectStatus().is3xxRedirection()
+                                .expectHeader().valueEquals("Location", "/cart");
         }
 
         @Test
         void preparePayment_shouldReturnJson() {
                 double mockedBalance = 123.45;
+                CartView cartView = new CartView(List.of(), BigDecimal.valueOf(1000));
 
-                Mockito.when(cartService.getCartView(Mockito.anyString()))
-                                .thenReturn(Mono.just(new CartView(List.of(), BigDecimal.valueOf(1000))));
-
-                Mockito.when(paymentServiceClient.getBalance())
-                                .thenReturn(Mono.just(
-                                                new BalanceResponse().balance(BigDecimal.valueOf(mockedBalance))));
+                Mockito.when(cartPaymentService.prepareCartForView(Mockito.anyString()))
+                                .thenReturn(Mono.just(Map.of("cart", cartView, "currentBalance",
+                                                BigDecimal.valueOf(mockedBalance))));
 
                 webTestClient.get()
                                 .uri("/cart/prepare-payment")
-                                .cookie("CART_SESSION", "test-session") // <--- вот это ключевое
                                 .exchange()
                                 .expectStatus().isOk()
                                 .expectBody()
-                                .jsonPath("$.balance").isEqualTo(mockedBalance);
+                                .jsonPath("$.currentBalance").isEqualTo(mockedBalance);
+        }
+
+        @Test
+        void confirmPayment_shouldRedirectToOrder_whenPaymentSucceeds() {
+                String redirectUrl = "redirect:/orders/1";
+                Mockito.when(cartPaymentService.checkoutAndPay(Mockito.anyString()))
+                                .thenReturn(Mono.just(redirectUrl));
+
+                webTestClient.post()
+                                .uri("/cart/confirm-payment")
+                                .exchange()
+                                .expectStatus().is3xxRedirection()
+                                .expectHeader().valueEquals("Location", "/orders/1");
         }
 
         @Test
         void confirmPayment_shouldRedirectIfNoSession() {
+                Mockito.when(cartPaymentService.checkoutAndPay(Mockito.anyString()))
+                                .thenReturn(Mono.just("redirect:/products"));
+
                 webTestClient.post()
                                 .uri("/cart/confirm-payment")
                                 .exchange()
                                 .expectStatus().is3xxRedirection()
                                 .expectHeader().valueEquals("Location", "/products");
+        }
+
+        @Test
+        void checkout_shouldRedirectAfterPayment() {
+                String redirectUrl = "redirect:/orders/1";
+                Mockito.when(cartPaymentService.checkoutAndPay(Mockito.anyString()))
+                                .thenReturn(Mono.just(redirectUrl));
+
+                webTestClient.post()
+                                .uri("/cart/checkout")
+                                .exchange()
+                                .expectStatus().is3xxRedirection()
+                                .expectHeader().valueEquals("Location", "/orders/1");
         }
 }

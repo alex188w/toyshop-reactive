@@ -1,14 +1,23 @@
 package example.toyshop.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.ui.Model;
 
 import example.toyshop.dto.cart.CartView;
@@ -21,88 +30,105 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import org.junit.jupiter.api.BeforeEach;
 
-// @ExtendWith(MockitoExtension.class)
-// class ProductControllerTest {
-//     private ProductService productService;
-//     private CartService cartService;
-//     private ProductController controller;
-//     private Model model;
-//     private ServerHttpResponse response = Mockito.mock(ServerHttpResponse.class);
+@ExtendWith(MockitoExtension.class)
+class ProductControllerTest {
 
-//     @BeforeEach
-//     void setup() {
-//         productService = Mockito.mock(ProductService.class);
-//         cartService = Mockito.mock(CartService.class);
-//         model = Mockito.mock(Model.class);
+    @Mock
+    private ProductService productService;
 
-//         controller = new ProductController(productService, cartService);
-//     }
+    @Mock
+    private CartService cartService;
 
-//     @Test
-//     void listProducts_shouldAddProductsAndCartToModel() {
-//         String sessionId = null;
+    @Mock
+    private Model model;
 
-//         Product p1 = new Product();
-//         p1.setName("Мишка");
-//         p1.setPrice(1000);
+    @InjectMocks
+    private ProductController controller;
 
-//         CartView cart = new CartView(List.of(), BigDecimal.ZERO);
+    private OidcUser oidcUser;
 
-//         Mockito.when(productService.getAll()).thenReturn(Flux.just(p1));
-//         Mockito.when(cartService.getCartView(Mockito.anyString())).thenReturn(Mono.just(cart));
+    @BeforeEach
+    void setup() {
+        oidcUser = Mockito.mock(OidcUser.class);
+        lenient().when(oidcUser.getSubject()).thenReturn("admin");
+    }
 
-//         Mono<String> result = controller.listProducts(sessionId, response, null,
-//                 "name_asc", 10, model);
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    void listProducts_shouldAddProductsAndCartToModel() {
+        // Подготовка продуктов
+        Product p1 = new Product();
+        p1.setId(1L);
+        p1.setName("Мишка");
+        p1.setPrice(1000);
 
-//         StepVerifier.create(result)
-//                 .expectNext("products")
-//                 .verifyComplete();
+        // Подготовка корзины
+        CartView cart = new CartView(List.of(), BigDecimal.ZERO);
 
-//         Mockito.verify(model).addAttribute("products", List.of(p1));
-//         Mockito.verify(model).addAttribute("cartTotalQuantity", 0);
-//     }
+        // Lenient стабы
+        lenient().when(productService.getAll()).thenReturn(Flux.just(p1));
+        lenient().when(cartService.getCartView("admin")).thenReturn(Mono.just(cart));
 
-//     @Test
-//     void addForm_shouldReturnAddProductPage() {
-//         String page = controller.addForm();
-//         assertEquals("add-product", page);
-//     }
+        // Вызов метода
+        Mono<String> result = controller.listProducts(oidcUser, null, "name_asc", 10, model);
 
-//     @Test
-//     void addProduct_shouldSaveProductAndRedirect() {
-//         ProductForm form = new ProductForm();
-//         form.setName("Лего");
-//         form.setDescription("Конструктор");
-//         form.setPrice(2000);
-//         form.setQuantity(5);
-//         form.setFile(null); // без изображения
+        StepVerifier.create(result)
+                .expectNext("products")
+                .verifyComplete();
 
-//         Mockito.when(productService.save(Mockito.any(Product.class)))
-//                 .thenReturn(Mono.just(new Product()));
+        // Проверка модели
+        verify(model).addAttribute("products", List.of(p1));
+        verify(model).addAttribute("cartTotalQuantity", 0);
+        verify(model).addAttribute("keyword", null);
+        verify(model).addAttribute("sort", "name_asc");
+        verify(model).addAttribute("size", 10);
+    }
 
-//         Mono<String> result = controller.addProduct(form);
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    void addProduct_shouldSaveProductAndRedirect() {
+        ProductForm form = new ProductForm();
+        form.setName("Лего");
+        form.setDescription("Конструктор");
+        form.setPrice(2000);
+        form.setQuantity(5);
+        form.setFile(null); // без изображения
 
-//         StepVerifier.create(result)
-//                 .expectNext("redirect:/products")
-//                 .verifyComplete();
+        lenient().when(productService.save(Mockito.any(Product.class)))
+                .thenReturn(Mono.just(new Product()));
 
-//         Mockito.verify(productService).save(Mockito.any(Product.class));
-//     }
+        Mono<String> result = controller.addProduct(form);
 
-//     @Test
-//     void getProduct_shouldAddProductToModel() {
-//         Product product = new Product();
-//         product.setId(1L);
-//         product.setName("Мяч");
+        StepVerifier.create(result)
+                .expectNext("redirect:/products")
+                .verifyComplete();
 
-//         Mockito.when(productService.getById(1L)).thenReturn(Mono.just(product));
+        verify(productService).save(Mockito.any(Product.class));
+    }
 
-//         Mono<String> result = controller.getProduct(1L, model);
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    void getProduct_shouldAddProductToModel() {
+        Product product = new Product();
+        product.setId(1L);
+        product.setName("Мяч");
 
-//         StepVerifier.create(result)
-//                 .expectNext("product")
-//                 .verifyComplete();
+        lenient().when(productService.getById(1L)).thenReturn(Mono.just(product));
 
-//         Mockito.verify(model).addAttribute("product", product);
-//     }
-// }
+        Mono<String> result = controller.getProduct(1L, model);
+
+        StepVerifier.create(result)
+                .expectNext("product")
+                .verifyComplete();
+
+        verify(model).addAttribute("product", product);
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    void addForm_shouldReturnAddProductPage() {
+        StepVerifier.create(controller.addForm())
+                .expectNext("add-product")
+                .verifyComplete();
+    }
+}

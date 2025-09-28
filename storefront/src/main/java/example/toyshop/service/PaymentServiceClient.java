@@ -9,6 +9,7 @@ import com.example.openapi.client.model.PaymentResponse;
 import example.toyshop.config.ClientRegistrationLogger;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
 import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientManager;
 import org.springframework.stereotype.Service;
@@ -27,17 +28,45 @@ import org.slf4j.LoggerFactory;
  * Предоставляет методы для получения баланса, оплаты и подтверждения платежей.
  */
 @Service
+@PreAuthorize("isAuthenticated()")
 public class PaymentServiceClient {
 
     private final WebClient webClient;
     private final ReactiveOAuth2AuthorizedClientManager authorizedClientManager;
-    private static final Logger log = LoggerFactory.getLogger(ClientRegistrationLogger.class);
+    // private static final Logger log =
+    // LoggerFactory.getLogger(ClientRegistrationLogger.class);
 
     public PaymentServiceClient(WebClient.Builder webClientBuilder,
             ReactiveOAuth2AuthorizedClientManager authorizedClientManager) {
         this.webClient = webClientBuilder.baseUrl("http://localhost:8081").build();
         this.authorizedClientManager = authorizedClientManager;
     }
+
+    /**
+     * Конструктор для тестирования PaymentServiceClient.
+     * <p>
+     * Создаёт экземпляр сервиса с WebClient, направленным на локальный тестовый
+     * сервер на {@code http://localhost:8081}, и моком
+     * {@link ReactiveOAuth2AuthorizedClientManager}.
+     * </p>
+     * <p>
+     * Используется в интеграционных тестах для эмуляции взаимодействия с
+     * платежным сервисом без необходимости поднятия реального сервера.
+     * </p>
+     *
+     * @param webClientBuilder        билдeр WebClient, используется для создания
+     *                                клиента
+     * @param authorizedClientManager менеджер OAuth2 авторизации, обычно мок в
+     *                                тестах
+     */
+
+    // public PaymentServiceClient(WebClient.Builder webClientBuilder,
+    // ReactiveOAuth2AuthorizedClientManager authorizedClientManager,
+    // String baseUrl) { // <-- новый параметр
+    // this.webClient = webClientBuilder.baseUrl(baseUrl).build(); // используем
+    // переданный baseUrl
+    // this.authorizedClientManager = authorizedClientManager;
+    // }
 
     /**
      * Получает access token для авторизации в платежном сервисе.
@@ -52,7 +81,7 @@ public class PaymentServiceClient {
                 .build();
 
         return authorizedClientManager.authorize(request)
-                .doOnNext(client -> log.info("Authorized client: {}", client))
+                // .doOnNext(client -> log.info("Authorized client: {}", client))
                 .flatMap(client -> {
                     if (client == null || client.getAccessToken() == null) {
                         return Mono.error(new IllegalStateException("Не удалось получить access token"));
