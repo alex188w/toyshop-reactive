@@ -7,6 +7,29 @@ services:
     ports:
       - "6379:6379"
 
+  postgres:
+    image: postgres:15
+    container_name: toyshop-postgres
+    environment:
+      POSTGRES_USER: toyshop
+      POSTGRES_PASSWORD: toyshop
+      POSTGRES_DB: toyshop
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:21.1.1
+    container_name: toyshop-keycloak
+    environment:
+      KC_DB: h2
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_STRICT: "false"
+    command: start-dev
+    ports:
+      - "8080:8080"
+
   payment-service:
     build:
       context: ./paymentService
@@ -14,9 +37,16 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/toyshop
+      SPRING_DATASOURCE_USERNAME: toyshop
+      SPRING_DATASOURCE_PASSWORD: toyshop
+      SPRING_REDIS_HOST: redis
+      KEYCLOAK_URL: http://keycloak:8080
     depends_on:
       - redis
+      - postgres
+      - keycloak
 
   storefront:
     build:
@@ -25,11 +55,20 @@ services:
     ports:
       - "8085:8085"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - PAYMENT_SERVICE_URL=http://payment-service:8081
-      - SPRING_REDIS_HOST=redis
+      SPRING_PROFILES_ACTIVE: docker
+      PAYMENT_SERVICE_URL: http://payment-service:8081
+      SPRING_REDIS_HOST: redis
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/toyshop
+      SPRING_DATASOURCE_USERNAME: toyshop
+      SPRING_DATASOURCE_PASSWORD: toyshop
+      KEYCLOAK_URL: http://keycloak:8080
     depends_on:
       - payment-service
       - redis
+      - postgres
+      - keycloak
     volumes:
-      - ./uploads:/app/uploads   # локальная папка монтируется в контейнер
+      - ./uploads:/app/uploads
+
+volumes:
+  pgdata:

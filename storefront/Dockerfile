@@ -1,29 +1,29 @@
 # ===== Сборка приложения =====
-# FROM eclipse-temurin:21-jdk AS builder
+FROM eclipse-temurin:21-jdk AS builder
 
-# WORKDIR /app
+WORKDIR /app
 
-# # Устанавливаем Maven
-# RUN apt-get update && apt-get install -y maven
+# Устанавливаем Maven
+RUN apt-get update && apt-get install -y maven
 
-# # Копируем pom.xml и исходники
-# COPY pom.xml .
-# COPY src ./src
+# Копируем pom.xml и исходники
+COPY pom.xml .
+COPY src ./src
 
-# # Собираем jar (без тестов для ускорения)
-# RUN mvn -B clean package -DskipTests
+# Собираем jar (без тестов для ускорения)
+RUN mvn -B clean package -DskipTests
 
-# # ===== Запуск приложения =====
-# FROM eclipse-temurin:21-jdk
+# ===== Запуск приложения =====
+FROM eclipse-temurin:21-jdk
 
-# WORKDIR /app
+WORKDIR /app
 
-# # Копируем собранный jar
-# COPY --from=build /app/target/storefront-0.0.1-SNAPSHOT.jar app.jar
+# Копируем собранный jar
+COPY --from=build /app/target/storefront-0.0.1-SNAPSHOT.jar app.jar
 
-# EXPOSE 8085
+EXPOSE 8085
 
-# ENTRYPOINT ["java","-jar","app.jar"]
+ENTRYPOINT ["java","-jar","app.jar"]
 
 # Используем готовый JRE для запуска
 FROM eclipse-temurin:21-jre
